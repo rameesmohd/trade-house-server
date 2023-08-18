@@ -1,13 +1,14 @@
 const userModel = require('../model/userSchema')
 const bcrypt = require('bcrypt')
 const {generateAuthToken} = require('../middleware/auth')
+let errMsg,msg;
 
 const register = async(req,res)=>{
     try {
         let {name,email,mobile,password} = req.body
         console.log(name);
         const user = await userModel.find({email: email});
-        if(user.length === 0){
+        if(user.length){
             const hashpassword = await bcrypt.hash(password,10)
             userModel.create({
                 name: name,
@@ -19,12 +20,13 @@ const register = async(req,res)=>{
             }).catch((error)=>{
                 console.log(error);
             })
-            res.json({ status:true, result:userDetails })
+            res.status(200).json({ msg:'Registered successfully' })
         }else{
-            res.json({error: true})
+            res.status(400).json({errMsg: 'Email alredy exists'})
         }
     } catch (error) {
-        res.json({ status: "failed", message: error.message });
+        res.status(500).json({errMsg: 'Server error'})
+
     }
 }
 
