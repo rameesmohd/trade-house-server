@@ -32,9 +32,11 @@ const register = async(req,res)=>{
 const login = async (req, res) => {
     try {
         let response = {
+            user_id : null,
             message: null,
             token: null,
-            name: null
+            name: null,
+            status : null,
         } , email,isMatch
         req.body.google ? email = req.body.payload.email : email = req.body.email
         const userDetails = await usermodel.findOne({ email: email })
@@ -46,6 +48,8 @@ const login = async (req, res) => {
                 response.token = generateAuthToken(userDetails);
                 response.message = 'You have logged in';
                 response.name = userDetails.name;
+                response.user_id = userDetails._id
+                response.status = true
                 let token = response.token;
                 let name = response.name;
                 const obj = { token, name };

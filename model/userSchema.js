@@ -20,6 +20,18 @@ const userSchema = new mongoose.Schema(
             type : String,
             trim : true,
             minlength : [6]
+        },
+        is_blocked : {
+            type : Boolean,
+            default : false
+        },
+        is_admin : {
+            type : Boolean,
+            default : false
+        },
+        is_tutor : {
+            type : Boolean,
+            default : false
         }
     }
 )
