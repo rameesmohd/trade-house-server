@@ -4,7 +4,10 @@ const adminController = require('../controllers/adminController/adminController'
 
 
 router.get('/users-details',adminController.userDetails)
-router.post('/update-profile',adminController.updateProfile)
+router.post('/update-user',adminController.updateProfile)
+router.get('/block-user',adminController.block)
+router.get('/unblock-user',adminController.unblock)
+
 
 
 
