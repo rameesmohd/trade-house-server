@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const {generateAuthToken} = require('../../middleware/auth');
 const usermodel = require('../../model/userSchema');
+const nodeMailer = require('nodemailer')
 let errMsg,msg;
 
 const register = async(req,res)=>{
@@ -8,7 +9,7 @@ const register = async(req,res)=>{
         let {name,email,mobile,password} = req.body
         console.log(name);
         const user = await usermodel.find({email: email});
-        if(user.length){
+        if(!user.length){
             const hashpassword = await bcrypt.hash(password,10)
             usermodel.create({
                 name: name,
@@ -41,15 +42,20 @@ const login = async (req, res) => {
         req.body.google ? email = req.body.payload.email : email = req.body.email
         const userDetails = await usermodel.findOne({ email: email })
         if (userDetails) {
-            if(req.body?.password){
-              isMatch = await bcrypt.compare(req.body.password,userDetails.password) 
-            }
-            if (isMatch || req.body.google) {
-                response.token = generateAuthToken(userDetails);
-                response.message = 'You have logged in';
-                response.name = userDetails.name;
-                response.user_id = userDetails._id
-                response.status = true
+            if(userDetails.is_blocked){ 
+                response.message = 'account suspended!!'
+                res.status(400).json({ response }) }
+                else{
+
+                    if(req.body?.password){
+                        isMatch = await bcrypt.compare(req.body.password,userDetails.password) 
+                    }
+                    if (isMatch || req.body.google) {
+                        response.token = generateAuthToken(userDetails);
+                        response.message = 'You have logged in';
+                        response.name = userDetails.name;
+                        response.user_id = userDetails._id
+                        response.status = true
                 let token = response.token;
                 let name = response.name;
                 const obj = { token, name };
@@ -62,7 +68,8 @@ const login = async (req, res) => {
                 response.message = 'Password is wrong!!';
                 res.status(400).json({ response });
             }
-        } else {
+        }
+        } else{
             response.message = 'User does not exist!!';
             res.status(400).json({ response });
         }
@@ -71,29 +78,66 @@ const login = async (req, res) => {
     }
 }
 
-
 const forgetPasswordAuth= async(req,res)=>{
     try {
-        const user = await usermodel.findOne({email : req.query.email});
-        user ? res.status(200).json({ msg:'user existed' }) : res.status(400).json({msg: 'user not exists,please signup'})
+        const user = await usermodel.findOne({email : req.body.email});
+        if(user){
+            const bool =  sendResetPasswordMail(user.name,user.email,req.body.OTP)
+            bool ? res.status(200)
+                .json({ message:'OTP sent successfully,please check your email' })
+            : res.status(500).json({message:'Error sending email'});
+        }else 
+            res.status(400).json({message: 'user not exists,please signup'})
     } catch (error) {
-        res.status(500).json({errMsg: 'Server side error'})
+        res.status(500).json({message: 'Server side error'})
+    }
+}
+
+const sendResetPasswordMail = async(name,email,OTP)=>{
+    try {
+        const transporter = nodeMailer.createTransport({
+            host:'smtp.gmail.com',
+            port:465,
+            secure:true,
+            require:true,
+            auth:{
+                user:'tradehouseacademy@gmail.com',
+                pass : 'tanemecfugsijseq'
+            }
+        })
+        const mailOptions = {
+            from : 'tradehouseacademy@gmail.com',
+            to:email,
+            subject:'For Verification mail',
+            html:'<p>Hii '+name+',reset password OTP :'+OTP+'</p>'
+        }
+        transporter.sendMail(mailOptions, function(error,info){
+            if(error){
+                console.log(error);
+                return false
+                // res.status(500).json({message:'Error sending email'});
+            }else{
+                console.log("Email has been sent :- ",info.response);
+                return true
+                // res.status(200).json({ message:'OTP sent successfully,please check your email' })
+            }
+        }) 
+    } catch (error) {
+        console.log(error.message);
     }
 }
 
 const forgetPassword=async(req,res)=>{
-    try {     
+    try {   
         const hashpassword = await bcrypt.hash(req.body.password,10)
         const email = req.body.email
         const reset = await usermodel.updateOne({email: email},{$set:{password : hashpassword}})
-        reset ? res.status(200).json({msg:'password changed succesfully'}) :
-        res.status(400).json({msg :'client side error'})
+        reset ? res.status(200).json({message:'password changed succesfully'}) :
+        res.status(400).json({message :'client side error'})
     } catch (error) {
-        res.status(500).json({msg:'server side error'})
+        res.status(500).json({message:'server side error'})
     }
 }
-
-
 
 module.exports = {
     register,
