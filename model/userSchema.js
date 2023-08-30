@@ -25,6 +25,15 @@ const userSchema = new mongoose.Schema(
             type : Boolean,
             default : false
         },
+        image: {
+            type : String
+        },
+        firstName :{
+            type : String
+        },
+        lastName : {
+            type : String
+        },
         is_admin : {
             type : Boolean,
             default : false
@@ -32,6 +41,44 @@ const userSchema = new mongoose.Schema(
         is_tutor : {
             type : Boolean,
             default : false
+        },
+        is_requested : {
+            type : Boolean,
+            default : false
+        },
+        experience :{
+            type : Number
+        },
+        qualification :{
+            type: String
+        },
+        category : {
+            type : String
+        },
+        CV : {
+            type : String
+        },
+        type_of_trader :{
+            type : String
+        },
+        user_ratings :[
+            {
+                user_id : {
+                    type : mongoose.Schema.Types.ObjectId,
+                    ref : 'users'
+                },
+                rating : {
+                    type : Number                
+                },
+                review : {
+                    type : {
+                        type: String
+                    }
+                }
+            }
+        ],
+        total_rating : {
+            type : Number
         }
     }
 )

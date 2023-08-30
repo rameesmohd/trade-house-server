@@ -1,4 +1,31 @@
+const { generateAdminToken } = require('../../middleware/auth');
 const userModel = require('../../model/userSchema')
+
+const login = async(req,res)=>{
+    try {
+        const {email,pass} = req.body
+        const adminData = await userModel.findOne({
+            $and: [
+              { email: email },
+              { password: pass },
+              { is_admin: true }
+            ]
+          });
+          if(!adminData)
+           res.status(400).json({message : 'autherisation failed!!'}) 
+          else {
+              let token = generateAdminToken(adminData)
+              res.cookie("jwt", token, {
+                  httpOnly: false,
+                  maxAge: 6000 * 1000
+                }).status(200).json({message : 'login success'}) 
+            }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({message : 'server side error'})
+    }
+}
+
 
 const userDetails = async(req,res)=>{
     try {
@@ -48,5 +75,6 @@ module.exports = {
     userDetails,
     updateProfile,
     block,
-    unblock
+    unblock,
+    login
 }

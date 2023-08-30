@@ -7,6 +7,7 @@ router.get('/users-details',adminController.userDetails)
 router.post('/update-user',adminController.updateProfile)
 router.get('/block-user',adminController.block)
 router.get('/unblock-user',adminController.unblock)
+router.post('/login',adminController.login)
 
 
 

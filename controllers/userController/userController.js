@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt')
 const {generateAuthToken} = require('../../middleware/auth');
 const usermodel = require('../../model/userSchema');
 const nodeMailer = require('nodemailer')
+const fs = require('fs')
+const cloudinary = require('../../config/cloudinary')
 let errMsg,msg;
 
 const register = async(req,res)=>{
@@ -37,8 +39,11 @@ const login = async (req, res) => {
             message: null,
             token: null,
             name: null,
+            email : null,
             status : null,
-        } , email,isMatch
+            is_requested : null
+        },email,isMatch
+
         req.body.google ? email = req.body.payload.email : email = req.body.email
         const userDetails = await usermodel.findOne({ email: email })
         if (userDetails) {
@@ -46,7 +51,6 @@ const login = async (req, res) => {
                 response.message = 'account suspended!!'
                 res.status(400).json({ response }) }
                 else{
-
                     if(req.body?.password){
                         isMatch = await bcrypt.compare(req.body.password,userDetails.password) 
                     }
@@ -56,10 +60,11 @@ const login = async (req, res) => {
                         response.name = userDetails.name;
                         response.user_id = userDetails._id
                         response.status = true
-                let token = response.token;
-                let name = response.name;
-                const obj = { token, name };
-
+                        response.email = userDetails.email
+                        response.is_requested = userDetails.is_requested
+                        let token = response.token;
+                        let name = response.name;
+                        const obj = { token, name }
                 res.cookie("jwt", obj, {
                     httpOnly: false,
                     maxAge: 6000 * 1000
@@ -139,9 +144,40 @@ const forgetPassword=async(req,res)=>{
     }
 }
 
+const submitRequest= async(req,res)=>{
+    try{
+        const  {category,experience,qualification,type,firstName,email,lastName,pdfDataUrl} = req.body
+        const file = req.file
+        let pdf;
+        const upload = await cloudinary.uploader.upload(file?.path)
+                pdf = upload.secure_url;
+                fs.unlinkSync(file.path)
+        const update = await usermodel.updateOne({email : email},{$set : {
+            is_requested : true,
+            category : category,
+            experience : experience,
+            qualification : qualification,
+            type_of_trader :type,
+            CV:pdf,
+            firstName :firstName,
+            lastName : lastName
+    }})
+    if(update){
+        res.status(200).json({message : 'Request submitted successfully!'})
+    }
+    } catch (error) {
+
+        res.status(500).json({message : error.message})
+        if (req.file) fs.unlinkSync(file.path)
+
+        console.log(error);   
+    }
+}
+
 module.exports = {
     register,
     login,
     forgetPasswordAuth,
-    forgetPassword
+    forgetPassword,
+    submitRequest
 }
