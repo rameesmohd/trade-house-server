@@ -16,5 +16,5 @@ function createMulter() {
 
 
 module.exports = {
-    createMulter,
+    createMulter
 };

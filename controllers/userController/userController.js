@@ -154,6 +154,7 @@ const submitRequest= async(req,res)=>{
         const upload = await cloudinary.uploader.upload(file?.path)
             pdf = upload.secure_url;
             fs.unlinkSync(file.path)
+            
         const update = await usermodel.updateOne({email : email},{$set : {
             is_requested : true,
             category : category,
