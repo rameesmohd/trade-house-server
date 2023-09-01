@@ -41,7 +41,8 @@ const login = async (req, res) => {
             name: null,
             email : null,
             status : null,
-            is_requested : null
+            is_requested : null,
+            is_tutor : null
         },email,isMatch
 
         req.body.google ? email = req.body.payload.email : email = req.body.email
@@ -62,6 +63,7 @@ const login = async (req, res) => {
                         response.status = true
                         response.email = userDetails.email
                         response.is_requested = userDetails.is_requested
+                        response.is_tutor = userDetails.is_tutor
                         let token = response.token;
                         let name = response.name;
                         const obj = { token, name }
