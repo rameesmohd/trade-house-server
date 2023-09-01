@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken')
 const {OAuth2Client} = require('google-auth-library')
-const oAuth2Client = new OAuth2Client(process.env.CLIENTID,
-    process.env.SECRETID)
+const oAuth2Client = new OAuth2Client(process.env.CLIENTID,process.env.SECRETID)
 
 const googleVerify = async(req,res,next)=>{
     const authHeader = req.headers.authorization
@@ -23,20 +22,13 @@ const googleVerify = async(req,res,next)=>{
 }
 
 const generateAuthToken = (user) => {
-    const jwtSecretKey = 't9rXw5bF2mS7zQ8p';
+    const jwtSecretKey = process.env.JWTSECRETEKEY;
     const token = jwt.sign({ _id: user._id, name: user.name, email: user.email, phone: user.phone }, jwtSecretKey);
     return token;
 }
-const generateAdminToken = (user) => {
-    const jwtSecretKey = 't9rXw5bF2mS7zQ8p';
-    const token = jwt.sign({ _id: user._id,email: user.email }, jwtSecretKey);
-    return token;
-}
-
 
 
 module.exports = {
     generateAuthToken,
-    generateAdminToken,
     googleVerify,
 }

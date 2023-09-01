@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const {generateAuthToken} = require('../../middleware/auth');
+const {generateAuthToken} = require('../../middleware/userAuth');
 const usermodel = require('../../model/userSchema');
 const nodeMailer = require('nodemailer')
 const fs = require('fs')
@@ -146,12 +146,12 @@ const forgetPassword=async(req,res)=>{
 
 const submitRequest= async(req,res)=>{
     try{
-        const  {category,experience,qualification,type,firstName,email,lastName,pdfDataUrl} = req.body
+        const  {category,experience,qualification,type,firstName,email,lastName} = req.body
         const file = req.file
-        let pdf;
+        let pdf
         const upload = await cloudinary.uploader.upload(file?.path)
-                pdf = upload.secure_url;
-                fs.unlinkSync(file.path)
+            pdf = upload.secure_url;
+            fs.unlinkSync(file.path)
         const update = await usermodel.updateOne({email : email},{$set : {
             is_requested : true,
             category : category,
@@ -166,10 +166,8 @@ const submitRequest= async(req,res)=>{
         res.status(200).json({message : 'Request submitted successfully!'})
     }
     } catch (error) {
-
         res.status(500).json({message : error.message})
         if (req.file) fs.unlinkSync(file.path)
-
         console.log(error);   
     }
 }

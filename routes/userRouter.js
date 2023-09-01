@@ -4,6 +4,7 @@ const userController = require('../controllers/userController/userController')
 const multer = require('../config/multer');
 const upload = multer.createMulter();
 
+
 router.post('/signup',userController.register);
 router.post('/login',userController. login);
 router.post('/forgetpasswordauth',userController. forgetPasswordAuth);
