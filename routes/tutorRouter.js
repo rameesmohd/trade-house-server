@@ -7,7 +7,7 @@ const upload = multer.createMulter()
 
 router.post('/t-verify',tutorController.initialVerify)
 router.post('/add-course',verifyToken,upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.addCourse)
-
+router.get('/my-courses',verifyToken,tutorController.myCourses)
 
 
 
