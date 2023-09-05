@@ -25,6 +25,7 @@ const initialVerify =async(req,res)=>{
 
 const addCourse=async(req,res)=>{
     try {
+        console.log('add-course');
         let banner = req.files?.banner ? req.files?.banner[0] : null
         let prevVideo = req.files?.preview ? req.files?.preview[0] : null
         let prevVideoURL;

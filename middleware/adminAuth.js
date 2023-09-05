@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken')
 
 const verifyToken = async (req, res, next) => {
-    console.log('token verifying..');
     let token = req.header("Authorization");
     try {
         if (!token) return res.status(404).json({ message: "Authentication failed: no token provided." });
@@ -10,7 +9,12 @@ const verifyToken = async (req, res, next) => {
         }
         const verified = jwt.verify(token,process.env.JWTSECRETEKEY);
         req.user = verified;
-        next();
+        console.log('admin token verifying..');
+        if(req.user.role == 'admin'){
+            next();
+        }else{
+            return res.status(404).json({ message: "Authentication failed: invalid token." });
+        }
     } catch (error) {
         return res.status(404).json({ message: "Authentication failed: invalid token." });
     }
@@ -18,7 +22,7 @@ const verifyToken = async (req, res, next) => {
 
 const generateAdminToken = (user) => {
     const jwtSecretKey = process.env.JWTSECRETEKEY;
-    const token = jwt.sign({ _id: user._id,email: user.email }, jwtSecretKey);
+    const token = jwt.sign({ _id: user._id,email: user.email,role : 'admin'}, jwtSecretKey);
     return token;
 }
 

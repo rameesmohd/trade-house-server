@@ -21,9 +21,29 @@ const googleVerify = async(req,res,next)=>{
     next( createError.Unauthorised())
 }
 
+const verifyToken = async (req, res, next) => {
+    let token = req.header("Authorization");
+    try {
+        if (!token) return res.status(404).json({ message: "Authentication failed: no token provided." });
+        if (token.startsWith("Bearer")) {
+            token = token.slice(7,token.length).trimLeft();
+        }
+        const verified = jwt.verify(token,process.env.JWTSECRETEKEY);
+        req.user = verified;
+        console.log('tutor token verifying..');
+        if(req.user.role == 'user'){
+            next();
+        }else{
+            return res.status(404).json({ message: "Authentication failed: invalid token." });
+        }
+    } catch (error) {
+        return res.status(404).json({ message: "Authentication failed: invalid token." });
+    }
+};
+
 const generateAuthToken = (user) => {
     const jwtSecretKey = process.env.JWTSECRETEKEY;
-    const token = jwt.sign({ _id: user._id, name: user.name, email: user.email, phone: user.phone }, jwtSecretKey);
+    const token = jwt.sign({ _id: user._id, name: user.name, email: user.email, phone: user.phone ,role: 'user'}, jwtSecretKey);
     return token;
 }
 
@@ -31,4 +51,5 @@ const generateAuthToken = (user) => {
 module.exports = {
     generateAuthToken,
     googleVerify,
+    verifyToken
 }

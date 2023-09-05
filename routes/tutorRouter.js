@@ -10,11 +10,4 @@ router.post('/add-course',verifyToken,upload.fields([{ name: 'banner' }, { name:
 router.post('/edit-course',verifyToken,upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.editCourse)
 router.get('/my-courses',verifyToken,tutorController.myCourses)
 
-
-
-
-
-
-
-
 module.exports = router

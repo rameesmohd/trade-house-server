@@ -6,10 +6,9 @@ const upload = multer.createMulter();
 
 
 router.post('/signup',userController.register);
-router.post('/login',userController. login);
+router.post('/login',userController.login);
 router.post('/forgetpasswordauth',userController. forgetPasswordAuth);
 router.post('/forgetpassword',userController. forgetPassword);
 router.post('/tutor-request',upload.single('file'),userController.submitRequest);
-
 
 module.exports = router;
