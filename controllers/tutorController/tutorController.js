@@ -13,7 +13,7 @@ const initialVerify =async(req,res)=>{
             res.cookie("jwt", {token : token}, {
                 httpOnly: false,
                 maxAge: 6000 * 1000
-            }).status(200).json({token : token,id :tutor._id})
+            }).status(200).json({token : token,id :tutor._id,profile :tutor})
         }else{
             res.status(400).json({message : 'Unautherised access!!'})
         }
@@ -144,9 +144,41 @@ const editCourse=async(req,res)=>{
     }
 }
 
+const tutorProfile=async(req,res)=>{
+    try {
+        console.log(req.query);
+        const id= req.query.id
+        const data = await userModel.findOne({_id:id,is_tutor : true})
+        if(data){
+            res.status(200).json({tutor:data})
+        }else{
+            res.status(400).json({message: 'user not found!!'})
+        }
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+const updateImage=async(req,res)=>{
+    try {
+        if(req.body.imgDataUrl && req.body.id){
+           const Updated = await userModel.findByIdAndUpdate({_id :req.body.id},{$set :{image : req.body.imgDataUrl}})
+           if(Updated){
+            res.status(200).json({tutor:Updated})
+           }
+        }
+    } catch (error) {
+        res.status(500)
+        console.log(error.message);
+    }
+}
+
 module.exports= {
     initialVerify,
     addCourse,
     myCourses,
-    editCourse
+    editCourse,
+    tutorProfile,
+    updateImage
 }

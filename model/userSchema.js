@@ -79,6 +79,9 @@ const userSchema = new mongoose.Schema(
         ],
         total_rating : {
             type : Number
+        },
+        about_me :{
+            type : String
         }
     }
 )

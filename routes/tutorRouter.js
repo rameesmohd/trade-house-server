@@ -9,5 +9,7 @@ router.post('/t-verify',tutorController.initialVerify)
 router.post('/add-course',verifyToken,upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.addCourse)
 router.post('/edit-course',verifyToken,upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.editCourse)
 router.get('/my-courses',verifyToken,tutorController.myCourses)
+router.get('/tutor-profile',verifyToken,tutorController.tutorProfile)
+router.post('/update-image',verifyToken,tutorController.updateImage)
 
 module.exports = router
