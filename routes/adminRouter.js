@@ -13,5 +13,9 @@ router.get('/tutor-requests',verifyToken,adminController.tutorReq)
 router.get('/approve-request',verifyToken,adminController.approveTutor)
 router.get('/tutors-list',verifyToken,adminController.tutorslist)
 router.get('/toggle-block',verifyToken,adminController.toggleBlockTutor)
+router.get('/category',verifyToken,adminController.loadCategory)
+router.post('/add-category',verifyToken,adminController.addCategory)
+router.post('/update-category',verifyToken,adminController.updateCategory)
+
 
 module.exports = router

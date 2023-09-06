@@ -9,7 +9,7 @@ const verifyToken = async (req, res, next) => {
         }
         const verified = jwt.verify(token,process.env.JWTSECRETEKEY);
         req.user = verified;
-        console.log('admin token verifying..');
+        // console.log('admin token verifying..');
         if(req.user.role == 'admin'){
             next();
         }else{

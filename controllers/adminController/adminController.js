@@ -1,6 +1,6 @@
 const { generateAdminToken } = require('../../middleware/adminAuth');
-const usermodel = require('../../model/userSchema');
-const userModel = require('../../model/userSchema')
+const userModel = require('../../model/userSchema');
+const categoryModel = require('../../model/categorySchema')
 
 const login = async(req,res)=>{
     try {
@@ -102,7 +102,7 @@ const approveTutor =async(req,res)=>{
 
 const tutorslist =async(req,res)=>{
     try {
-        const tutorData =  await usermodel.find({is_tutor : true})
+        const tutorData =  await userModel.find({is_tutor : true})
         tutorData ? res.status(200).json({result : tutorData})
         : res.status(500)
     } catch (error) {
@@ -126,6 +126,47 @@ const toggleBlockTutor=async(req,res)=>{
     }
 }
 
+const addCategory=async(req,res)=>{
+    try {
+        console.log(req.body);
+        const catogary = new categoryModel({
+            category : req.body.newCategory
+        })
+        catogary.save()
+            .then(() => {
+                res.status(200).json({message : 'saved successfully'})
+            })
+            .catch((error) => {
+                res.status(500).json({message : error.message})
+            });
+    } catch (error) {
+        res.status(500)
+        console.log(err);
+    }
+}
+
+const loadCategory=async(req,res)=>{
+    try {
+      const data = await categoryModel.find({})
+      data ? res.status(200).json({result : data}) : res.status(500)
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
+const updateCategory=async(req,res)=>{
+    try {
+        console.log(req.body);
+        const update = await categoryModel.updateOne({_id:req.body.id},{$set:{category : req.body.newCategory}})
+        update ? res.status(200).json({message : 'Updated Succeessfully!'}) : res.status(500)
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+
 
 
 module.exports = {
@@ -137,5 +178,8 @@ module.exports = {
     tutorReq,
     approveTutor,
     tutorslist,
-    toggleBlockTutor
+    toggleBlockTutor,
+    addCategory,
+    loadCategory,
+    updateCategory
 }

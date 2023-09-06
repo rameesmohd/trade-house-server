@@ -11,5 +11,9 @@ router.post('/edit-course',verifyToken,upload.fields([{ name: 'banner' }, { name
 router.get('/my-courses',verifyToken,tutorController.myCourses)
 router.get('/tutor-profile',verifyToken,tutorController.tutorProfile)
 router.post('/update-image',verifyToken,tutorController.updateImage)
+router.post('/update-about',verifyToken,tutorController.updateAbout)
+router.get('/category',verifyToken,tutorController.loadCategory)
+
+
 
 module.exports = router

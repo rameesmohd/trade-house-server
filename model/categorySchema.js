@@ -4,6 +4,10 @@ const mongoose = require('mongoose')
 const categoryModel = new mongoose.Schema({
     category : {
         type : String
+    },
+    is_flaged : {
+        type : Boolean,
+        default : false
     }
 })
 

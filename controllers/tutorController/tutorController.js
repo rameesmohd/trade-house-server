@@ -3,6 +3,7 @@ const userModel = require('../../model/userSchema')
 const cloudinary = require('../../config/cloudinary')
 const fs = require('fs')
 const courseModel = require('../../model/courseSchema')
+const categoryModel = require('../../model/categorySchema')
 
 const initialVerify =async(req,res)=>{
     try {
@@ -25,7 +26,6 @@ const initialVerify =async(req,res)=>{
 
 const addCourse=async(req,res)=>{
     try {
-        console.log('add-course');
         let banner = req.files?.banner ? req.files?.banner[0] : null
         let prevVideo = req.files?.preview ? req.files?.preview[0] : null
         let prevVideoURL;
@@ -80,7 +80,7 @@ const addCourse=async(req,res)=>{
 const myCourses=async(req,res)=>{
     try {
         console.log('fetched to my-courses');
-        const courseData =  await courseModel.find({tutor : req.query.id})
+        const courseData =  await courseModel.find({tutor : req.query.id}).populate('category')
         res.status(200).json({result : courseData})
     } catch (error) {
         console.log(error);
@@ -90,8 +90,6 @@ const myCourses=async(req,res)=>{
 
 const editCourse=async(req,res)=>{
     try {
-        console.log(req.files,'edditttttttttttt');
-        console.log(req.body);
         let prevVideoURL;
         let bannerURL;
         let banner = req.files?.banner ? req.files?.banner[0] : null
@@ -104,7 +102,6 @@ const editCourse=async(req,res)=>{
                 description,
                 skillsOffering,
                 tutor } = req.body   
-        console.log(banner,'ddddddddd',prevVideo);
         if(prevVideo){
             await cloudinary.uploader.upload(prevVideo.path,{ resource_type: "video",
             public_id: "video_upload_example"
@@ -174,11 +171,37 @@ const updateImage=async(req,res)=>{
     }
 }
 
+const updateAbout=async(req,res)=>{
+    try {
+        console.log(req.body.tutorData);
+        const {id,about_me} = req.body
+        const Updated = await userModel.findByIdAndUpdate({_id :id},{$set :{about_me : about_me}})
+        if(Updated){
+         res.status(200).json({tutor:Updated})
+        }
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+const loadCategory=async(req,res)=>{
+    try {
+      const data = await categoryModel.find({})
+      data ? res.status(200).json({result : data}) : res.status(500)
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
 module.exports= {
     initialVerify,
     addCourse,
     myCourses,
     editCourse,
     tutorProfile,
-    updateImage
+    updateImage,
+    updateAbout,
+    loadCategory
 }
