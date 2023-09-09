@@ -12,7 +12,7 @@ const moduleSchema = new mongoose.Schema({
     chapters : [{
         chaptertitle : {
             type : String,
-            require  :true
+            require :true
         },
         video : {
             type :String

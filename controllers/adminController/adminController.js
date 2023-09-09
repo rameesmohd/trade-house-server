@@ -1,6 +1,7 @@
 const { generateAdminToken } = require('../../middleware/adminAuth');
 const userModel = require('../../model/userSchema');
 const categoryModel = require('../../model/categorySchema')
+const courseModel = require('../../model/courseSchema')
 
 const login = async(req,res)=>{
     try {
@@ -115,7 +116,7 @@ const toggleBlockTutor=async(req,res)=>{
         console.log(req.query);
         const success =  await userModel.updateOne({_id:req.query.id},{$set :{is_blocked : req.query.blockToggle}})
         if(success){
-           const tutorData =  await usermodel.find({is_tutor : true})
+           const tutorData =  await userModel.find({is_tutor : true})
            res.status(200).json({result : tutorData})
          }else{
              res.status(500)
@@ -166,6 +167,27 @@ const updateCategory=async(req,res)=>{
     }
 }
 
+const allCourses=async(req,res)=>{
+    try {
+        const allCourses = await courseModel.find({}).populate('category').populate('tutor') 
+        res.status(200).json({result : allCourses})
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
+const toggleActiveCourse=async(req,res)=>{
+    try {
+        console.log(req.query);
+        const success = await courseModel.updateOne({_id : req.query.id},{$set : {is_active : req.query.toggle}})
+        success ? res.status(200) : res.status(500)
+        console.log(success);
+    } catch (error) {
+        res.status(500)
+        console.log(error.message);
+    }
+}
 
 
 
@@ -181,5 +203,7 @@ module.exports = {
     toggleBlockTutor,
     addCategory,
     loadCategory,
-    updateCategory
+    updateCategory,
+    allCourses,
+    toggleActiveCourse
 }

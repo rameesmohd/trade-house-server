@@ -36,7 +36,7 @@ const addCourse=async(req,res)=>{
                 category,
                 description,
                 skillsOffering,
-                tutor } = req.body    
+                tutor,price } = req.body    
         if(prevVideo){
             await cloudinary.uploader.upload(prevVideo.path,{ resource_type: "video",
             public_id: "video_upload_example"
@@ -61,6 +61,7 @@ const addCourse=async(req,res)=>{
             description :description,
             skillsOffering :skillsOffering,
             tutor :tutor,
+            price:price,
             preview :prevVideoURL,
             banner :bannerURL
         })
@@ -101,7 +102,7 @@ const editCourse=async(req,res)=>{
                 category,
                 description,
                 skillsOffering,
-                tutor } = req.body   
+                tutor,price } = req.body   
         if(prevVideo){
             await cloudinary.uploader.upload(prevVideo.path,{ resource_type: "video",
             public_id: "video_upload_example"
@@ -125,6 +126,7 @@ const editCourse=async(req,res)=>{
                 category: category,
                 description: description,
                 skillsOffering: skillsOffering,
+                price:price,
                 tutor: tutor,
                 preview: prevVideo? prevVideoURL : req.body.preview,
                 banner: banner? bannerURL : req.body.banner

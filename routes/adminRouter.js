@@ -16,6 +16,12 @@ router.get('/toggle-block',verifyToken,adminController.toggleBlockTutor)
 router.get('/category',verifyToken,adminController.loadCategory)
 router.post('/add-category',verifyToken,adminController.addCategory)
 router.post('/update-category',verifyToken,adminController.updateCategory)
+router.get('/all-courses',verifyToken,adminController.allCourses)
+router.get('/toggle-activecourse',verifyToken,adminController.toggleActiveCourse)
+
+
+
+
 
 
 module.exports = router

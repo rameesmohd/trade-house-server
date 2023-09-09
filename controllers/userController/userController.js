@@ -3,7 +3,8 @@ const {generateAuthToken} = require('../../middleware/userAuth');
 const usermodel = require('../../model/userSchema');
 const nodeMailer = require('nodemailer')
 const fs = require('fs')
-const cloudinary = require('../../config/cloudinary')
+const cloudinary = require('../../config/cloudinary');
+const courseModel = require('../../model/courseSchema');
 let errMsg,msg;
 
 const register = async(req,res)=>{
@@ -175,10 +176,21 @@ const submitRequest= async(req,res)=>{
     }
 }
 
+const allCourses=async(req,res)=>{
+    try {
+        console.log('edfsedf');
+        const courses = await courseModel.find({is_active:true}).populate('tutor').populate('category')
+        courses ? res.status(200).json({result : courses}) : res.status(500)
+    } catch (error) {
+        console.log(error.message);
+        res.status(500)
+    }
+}
 module.exports = {
     register,
     login,
     forgetPasswordAuth,
     forgetPassword,
-    submitRequest
+    submitRequest,
+    allCourses
 }

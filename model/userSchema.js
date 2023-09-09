@@ -61,25 +61,6 @@ const userSchema = new mongoose.Schema(
         type_of_trader :{
             type : String
         },
-        user_ratings :[
-            {
-                user_id : {
-                    type : mongoose.Schema.Types.ObjectId,
-                    ref : 'users'
-                },
-                rating : {
-                    type : Number                
-                },
-                review : {
-                    type : {
-                        type: String
-                    }
-                }
-            }
-        ],
-        total_rating : {
-            type : Number
-        },
         about_me :{
             type : String
         }
