@@ -13,6 +13,11 @@ router.get('/tutor-profile',verifyToken,tutorController.tutorProfile)
 router.post('/update-image',verifyToken,tutorController.updateImage)
 router.post('/update-about',verifyToken,tutorController.updateAbout)
 router.get('/category',verifyToken,tutorController.loadCategory)
+router.get('/load-modules',verifyToken,tutorController.loadModules)
+router.post('/save-module',verifyToken,tutorController.saveModule)
+router.post('/update-module',verifyToken,tutorController.updateModule)
+router.get('/remove-module',verifyToken,tutorController.deleteModule)
+router.post('/add-chapter',verifyToken,tutorController.addChapter)
 
 
 

@@ -10,7 +10,7 @@ const moduleSchema = new mongoose.Schema({
         ref : 'course'
     },
     chapters : [{
-        chaptertitle : {
+        chapter_title : {
             type : String,
             require :true
         },
@@ -19,9 +19,6 @@ const moduleSchema = new mongoose.Schema({
         } 
         }
     ],
-    image : { 
-        type: String
-    },
     notes : {
         type: String
     }

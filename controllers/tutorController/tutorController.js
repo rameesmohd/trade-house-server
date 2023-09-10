@@ -4,6 +4,7 @@ const cloudinary = require('../../config/cloudinary')
 const fs = require('fs')
 const courseModel = require('../../model/courseSchema')
 const categoryModel = require('../../model/categorySchema')
+const moduleModel = require('../../model/moduleSchema')
 
 const initialVerify =async(req,res)=>{
     try {
@@ -197,6 +198,66 @@ const loadCategory=async(req,res)=>{
     }
 }
 
+const loadModules=async(req,res)=>{
+    try {
+        const modules = await moduleModel.find({courseId : req.query.courseId})
+        modules ? res.status(200).json({result:modules}) : res.status(500)
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
+const saveModule=async(req,res)=>{
+    try {
+        const module = new moduleModel({
+            title : req.body.title,
+            courseId : req.body.courseId,
+        }).save()
+        module && res.status(200).json({message : 'Saved successfully'})
+    } catch (error) {
+        res.status(500)
+        console.log(error.message);
+    }
+}
+
+const deleteModule=async(req,res)=>{
+    try {
+        const id = req.query.id
+        const success = await moduleModel.deleteOne({_id:id})
+        success && res.status(200).json({message : 'Deleted successfully'}) 
+    } catch (error) {
+        console.log(error.message);
+        res.status(500)
+    }
+}
+
+const updateModule=async(req,res)=>{
+    try {
+        const id = req.body.id
+        const newTitle = req.body.title
+        const updated = await moduleModel.updateOne({_id : id},{$set:{title : newTitle}})
+        updated && res.status(200).json({message : 'Updated succesfully'})
+    } catch (error) {
+        console.log(error.message);
+        res.status(500)
+    }
+}
+
+const addChapter=async(req,res)=>{
+    try {
+        console.log(req.body);
+        const courseId = req.body.courseId
+        const title = req.body.title
+        const saved =  await moduleModel.updateOne({_id:courseId},{$push:{chapters :{chapter_title : title}}})
+        console.log(saved);
+        saved && res.status(200).json({message: 'Chapter added successfully'}) 
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
 module.exports= {
     initialVerify,
     addCourse,
@@ -205,5 +266,10 @@ module.exports= {
     tutorProfile,
     updateImage,
     updateAbout,
-    loadCategory
+    loadCategory,
+    saveModule,
+    loadModules,
+    deleteModule,
+    updateModule,
+    addChapter
 }
