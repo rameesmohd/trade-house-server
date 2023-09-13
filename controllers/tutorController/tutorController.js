@@ -8,8 +8,8 @@ const moduleModel = require('../../model/moduleSchema')
 
 const initialVerify =async(req,res)=>{
     try {
-        const email = req.body.userEmail
-        const tutor =  await userModel.findOne({email : email,is_tutor : true})
+        const email = req.query.userEmail
+        const tutor =  await userModel.findOne({email : email,is_tutor : true,is_blocked:false})
         if(tutor){
             const token = generateTutorToken(tutor._id)
             res.cookie("jwt", {token : token}, {
@@ -70,7 +70,7 @@ const addCourse=async(req,res)=>{
             res.status(200).json({message : 'course added succesfully!!'})
             console.log('course saved..');
         }).catch((error)=>{
-            res.status(500).json({message : 'error saving course...'})
+            res.status(500).json({message : 'error saving course...try again!!'})
             console.log('error saving course...');
         })
     } catch (error) {
@@ -247,14 +247,73 @@ const updateModule=async(req,res)=>{
 const addChapter=async(req,res)=>{
     try {
         console.log(req.body);
+        const moduleId = req.body.moduleId
         const courseId = req.body.courseId
         const title = req.body.title
-        const saved =  await moduleModel.updateOne({_id:courseId},{$push:{chapters :{chapter_title : title}}})
-        console.log(saved);
-        saved && res.status(200).json({message: 'Chapter added successfully'}) 
+        const data =  await moduleModel.updateOne({_id:moduleId},{$push:{chapters :{chapter_title : title}}})
+        const modules = await moduleModel.find({courseId : courseId})
+        console.log(modules);
+        data && res.status(200).json({result:modules,message: 'Chapter added successfully'}) 
     } catch (error) {
         console.log(error);
         res.status(500)
+    }
+}
+
+const updateChapter=async(req,res)=>{
+    try {
+        const moduleId = req.body.moduleId
+        const chapterId = req.body.chapterId
+        const title = req.body.title
+        const currVideo = req.body.video
+        const video = req.files.video ? req.files.video[0] : null
+        let VideoURL;  
+        console.log(currVideo);
+        if(video){
+            await cloudinary.uploader.upload(video.path,{ resource_type: "video",
+            public_id: "video_upload_example"
+            }).then((data) => {
+                VideoURL = data.secure_url;
+                fs.unlinkSync(video.path)
+            }).catch((err) => {
+                fs.unlinkSync(video.path)
+                console.log(err)
+            });
+        }
+        const update = await moduleModel.updateOne(
+            { _id: moduleId, 'chapters._id': chapterId },
+            { $set: { 'chapters.$':{
+                chapter_title: title, 
+                video: VideoURL ? VideoURL: currVideo, 
+            }}})
+        update && res.status(200)
+        .json({message : 'Updated successfully',video : VideoURL ? VideoURL : currVideo ,chapter_title : title})
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
+const deleteChapter=async(req,res)=>{
+    try {
+        const chaptersId =req.query.chapter_id
+        const moduleId = req.query.module_id
+        const courseId = req.query.course_id
+        const updateResult = await moduleModel.updateOne(
+            { _id: moduleId },
+            { $pull: { chapters: { _id: chaptersId } } }
+          );
+        
+          if (updateResult.nModified === 1) {
+            console.log('Chapter removed successfully.');
+          } else {
+            console.log('Chapter not found or not removed.');
+          }
+          const modules = await moduleModel.find({ courseId: courseId });
+          res.status(200).json({result : modules})
+    } catch (error) {
+        res.status(500)
+        console.log(error.message);
     }
 }
 
@@ -271,5 +330,7 @@ module.exports= {
     loadModules,
     deleteModule,
     updateModule,
-    addChapter
+    addChapter,
+    updateChapter,
+    deleteChapter
 }

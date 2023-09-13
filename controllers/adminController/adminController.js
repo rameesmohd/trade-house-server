@@ -28,7 +28,6 @@ const login = async(req,res)=>{
     }
 }
 
-
 const userDetails = async(req,res)=>{
     try {
         const users = await userModel.find({
@@ -55,27 +54,24 @@ const updateProfile = async(req,res)=>{
     }
 }
 
-const block=async(req,res)=>{
+const handleUserBlock=async(req,res)=>{
     try {
-        const id = req.query.id
-        await userModel.updateOne({ _id: id }, { $set: { is_blocked : true } });
-        res.status(200).json({message : 'user blocked!!'})
+        const {action,id}  = req.params
+        console.log(action,id);
+        if(action==='block'){
+            await userModel.updateOne({ _id: id }, { $set: { is_blocked : true } });
+            res.status(200).json({message : 'user blocked!!'})
+        }
+        else{
+            await userModel.updateOne({ _id: id }, { $set: { is_blocked : false } });
+            res.status(200).json({message : 'user unblocked!!'})
+        }
     } catch (error) {
-        console.log(error.message);
         res.status(500)
+        console.log(error);
     }
 }
 
-const unblock=async(req,res)=>{
-    try {
-        const id = req.query.id
-        await userModel.updateOne({ _id: id }, { $set: { is_blocked : false } });
-        res.status(200).json({message : 'user unblocked!!'})
-    } catch (error) {
-        console.log(error.message);
-        res.status(500)
-    }
-}
 
 const tutorReq = async(req,res)=>{
     try {
@@ -90,7 +86,22 @@ const tutorReq = async(req,res)=>{
 const approveTutor =async(req,res)=>{
     try {
         const id = req.query.id
-        const status =  await userModel.updateOne({_id : id},{$set:{is_tutor : true ,is_requested :false}})
+        const status =  await userModel.updateOne({_id : id},{$set:{is_tutor : true ,is_requested :false,req_status : 'approved'}})
+        if(status){
+            const requestedUsers =  await userModel.find({is_requested : true})
+            res.status(200).json({result : requestedUsers})
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
+const rejectTutorReq =async(req,res)=>{
+    try {
+        console.log('asdfdf');
+        const id = req.query.id
+        const status =  await userModel.updateOne({_id : id},{$set:{is_requested :false,req_status : 'rejected'}})
         if(status){
             const requestedUsers =  await userModel.find({is_requested : true})
             res.status(200).json({result : requestedUsers})
@@ -190,12 +201,9 @@ const toggleActiveCourse=async(req,res)=>{
 }
 
 
-
 module.exports = {
     userDetails,
     updateProfile,
-    block,
-    unblock,
     login,
     tutorReq,
     approveTutor,
@@ -205,5 +213,7 @@ module.exports = {
     loadCategory,
     updateCategory,
     allCourses,
-    toggleActiveCourse
+    toggleActiveCourse,
+    rejectTutorReq,
+    handleUserBlock
 }

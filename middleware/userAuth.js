@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const {OAuth2Client} = require('google-auth-library')
+const usermodel = require('../model/userSchema')
 const oAuth2Client = new OAuth2Client(process.env.CLIENTID,process.env.SECRETID)
 
 const googleVerify = async(req,res,next)=>{
@@ -30,7 +31,11 @@ const verifyToken = async (req, res, next) => {
         }
         const verified = jwt.verify(token,process.env.JWTSECRETEKEY);
         req.user = verified;
-        // console.log('tutor token verifying..');
+        console.log(req.user,'sdfsadrfe');
+        const user = await usermodel.findOne({_id:req.user._id,is_blocked:true})
+        if(user){
+            return res.status(403).json({ message: 'Access blocked for this user'});
+        }
         if(req.user.role == 'user'){
             next();
         }else{

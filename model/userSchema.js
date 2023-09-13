@@ -46,6 +46,9 @@ const userSchema = new mongoose.Schema(
             type : Boolean,
             default : false
         },
+        req_status : {
+            type : String
+        },
         experience :{
             type : Number
         },

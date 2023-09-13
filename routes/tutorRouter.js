@@ -5,20 +5,30 @@ const {verifyToken} = require('../middleware/tutorAuth')
 const multer = require('../config/multer')
 const upload = multer.createMulter()
 
-router.post('/t-verify',tutorController.initialVerify)
-router.post('/add-course',verifyToken,upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.addCourse)
-router.post('/edit-course',verifyToken,upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.editCourse)
-router.get('/my-courses',verifyToken,tutorController.myCourses)
-router.get('/tutor-profile',verifyToken,tutorController.tutorProfile)
-router.post('/update-image',verifyToken,tutorController.updateImage)
-router.post('/update-about',verifyToken,tutorController.updateAbout)
-router.get('/category',verifyToken,tutorController.loadCategory)
-router.get('/load-modules',verifyToken,tutorController.loadModules)
-router.post('/save-module',verifyToken,tutorController.saveModule)
-router.post('/update-module',verifyToken,tutorController.updateModule)
-router.get('/remove-module',verifyToken,tutorController.deleteModule)
-router.post('/add-chapter',verifyToken,tutorController.addChapter)
+router.get('/verify',tutorController.initialVerify)
 
+router.use(verifyToken)
 
+router.route('/courses')
+    .post(upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.addCourse)
+    .patch(upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.editCourse)
+    .get(tutorController.myCourses)
+
+router.route('/modules')
+    .get(tutorController.loadModules)
+    .post(tutorController.saveModule)
+    .patch(tutorController.updateModule)
+    .delete(tutorController.deleteModule)
+    
+router.route('/chapter')
+    .post(tutorController.addChapter)
+    .patch(upload.fields([{name:'video'}]),tutorController.updateChapter)
+    .delete(tutorController.deleteChapter)
+    
+router.get('/profile',tutorController.tutorProfile)
+router.get('/category',tutorController.loadCategory)
+router.patch('/about',tutorController.updateAbout)
+router.patch('/image',tutorController.updateImage)
+    
 
 module.exports = router

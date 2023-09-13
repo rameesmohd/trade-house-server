@@ -45,7 +45,6 @@ const login = async (req, res) => {
             is_requested : null,
             is_tutor : null
         },email,isMatch
-
         req.body.google ? email = req.body.payload.email : email = req.body.email
         const userDetails = await usermodel.findOne({ email: email })
         if (userDetails) {
@@ -152,10 +151,11 @@ const submitRequest= async(req,res)=>{
         const  {category,experience,qualification,type,firstName,email,lastName} = req.body
         const file = req.file
         let pdf
+
         const upload = await cloudinary.uploader.upload(file?.path)
             pdf = upload.secure_url;
             fs.unlinkSync(file.path)
-            
+        
         const update = await usermodel.updateOne({email : email},{$set : {
             is_requested : true,
             category : category,
@@ -178,7 +178,6 @@ const submitRequest= async(req,res)=>{
 
 const allCourses=async(req,res)=>{
     try {
-        console.log('edfsedf');
         const courses = await courseModel.find({is_active:true}).populate('tutor').populate('category')
         courses ? res.status(200).json({result : courses}) : res.status(500)
     } catch (error) {
@@ -186,11 +185,24 @@ const allCourses=async(req,res)=>{
         res.status(500)
     }
 }
+
+const tutorload=async(req,res)=>{
+    try {
+        const email = req.query.email
+        const userData =  await usermodel.findOne({email: email})
+        res.status(200).json({result : userData})
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
 module.exports = {
     register,
     login,
     forgetPasswordAuth,
     forgetPassword,
     submitRequest,
-    allCourses
+    allCourses,
+    tutorload
 }

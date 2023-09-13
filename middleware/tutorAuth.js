@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const usermodel = require('../model/userSchema')
 
 const verifyToken = async (req, res, next) => {
     let token = req.header("Authorization");
@@ -9,7 +10,10 @@ const verifyToken = async (req, res, next) => {
         }
         const verified = jwt.verify(token,process.env.JWTSECRETEKEY);
         req.user = verified;
-        // console.log('tutor token verifying..');
+        const user = await usermodel.findOne({_id:req.user._id,is_blocked:true})
+        if(user){
+            return res.status(403).json({ message: 'Access is blocked for this user.'});
+        }
         if(req.user.role == 'tutor'){
             next();
         }else{
