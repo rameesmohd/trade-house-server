@@ -36,7 +36,7 @@ const courseSchema = new mongoose.Schema({
     },
     price : {
         type : Number
-    },
+    }, 
     user_ratings :[
         {
             user_id : {
