@@ -12,10 +12,11 @@ router.post('/forgetpasswordauth',userController. forgetPasswordAuth);
 router.post('/forgetpassword',userController. forgetPassword);
 router.get('/all-courses',userController.allCourses)
 router.post('/tutor-request',upload.single('file'),userController.submitRequest);
-router.get('/payment',paymentController.paymentStatusHandle)
+router.get('/payments',paymentController.paymentStatusHandle)
 
 router.use(verifyToken)
 router.get('/tutor-load',userController.tutorload);
-router.post('/payment/:methord',paymentController.paymentModeHandle)
+router.post('/payments/:methord',paymentController.paymentModeHandle)
+router.post('/verifyRazorpay',paymentController.verifyrzpay)
 
 module.exports = router;
