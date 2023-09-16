@@ -12,7 +12,7 @@ const initialVerify =async(req,res)=>{
         const {email,password} = req.body
         if(email && password){
             const tutor =  await userModel.findOne({email : email,is_tutor : true,is_blocked:false})
-            console.log(tutor,'jjjjjjjjjjjjjjjjjjjjjjjjjj');
+
             const isMatch = bcrypt.compare(password,tutor.password) 
             if(isMatch){
                 if(tutor){
