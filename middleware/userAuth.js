@@ -31,7 +31,6 @@ const verifyToken = async (req, res, next) => {
         }
         const verified = jwt.verify(token,process.env.JWTSECRETEKEY);
         req.user = verified;
-        // console.log(req.user);
         const user = await usermodel.findOne({_id:req.user._id,is_blocked:true})
         if(user){
             return res.status(403).json({ message: 'Access blocked for this user'});

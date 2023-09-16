@@ -2,20 +2,31 @@ const { generateTutorToken } = require('../../middleware/tutorAuth');
 const userModel = require('../../model/userSchema')
 const cloudinary = require('../../config/cloudinary')
 const fs = require('fs')
+const bcrypt = require('bcrypt')
 const courseModel = require('../../model/courseSchema')
 const categoryModel = require('../../model/categorySchema')
 const moduleModel = require('../../model/moduleSchema')
 
 const initialVerify =async(req,res)=>{
     try {
-        const email = req.query.userEmail
-        const tutor =  await userModel.findOne({email : email,is_tutor : true,is_blocked:false})
-        if(tutor){
-            const token = generateTutorToken(tutor._id)
-            res.cookie("jwt", {token : token}, {
-                httpOnly: false,
-                maxAge: 6000 * 1000
-            }).status(200).json({token : token,id :tutor._id,profile :tutor})
+        const {email,password} = req.body
+        if(email && password){
+            const tutor =  await userModel.findOne({email : email,is_tutor : true,is_blocked:false})
+            console.log(tutor,'jjjjjjjjjjjjjjjjjjjjjjjjjj');
+            const isMatch = bcrypt.compare(password,tutor.password) 
+            if(isMatch){
+                if(tutor){
+                    const token = generateTutorToken(tutor._id)
+                    res.cookie("jwt", {token : token}, {
+                        httpOnly: false,
+                        maxAge: 6000 * 1000
+                    }).status(200).json({token : token,id :tutor._id,profile :tutor})
+                }else{
+                    res.status(400).json({message : 'Unautherised access!!'})
+                }
+            }else{
+            res.status(400).json({message : 'password incurrect!!'})
+            }
         }else{
             res.status(400).json({message : 'Unautherised access!!'})
         }
