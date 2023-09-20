@@ -7,7 +7,6 @@ const upload = multer.createMulter()
 
 router.post('/login',tutorController.initialVerify)
 
-
 router.use(verifyToken)
 
 router.route('/courses')

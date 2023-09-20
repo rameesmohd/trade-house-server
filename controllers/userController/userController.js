@@ -14,26 +14,22 @@ let errMsg,msg;
 const register = async(req,res)=>{
     try {
         let {name,email,mobile,password} = req.body
-        console.log(name);
-        const user = await usermodel.find({email: email});
-        if(!user.length){
+        const user = await usermodel.findOne({email: email});
+        if(!user){
             const hashpassword = await bcrypt.hash(password,10)
-            usermodel.create({
+            await usermodel.create({
                 name: name,
                 email: email.toLowerCase(),
                 mobile: mobile,
                 password: hashpassword
-            }).then((data)=>{
-                console.log('success',data);
-            }).catch((error)=>{
-                console.log(error);
             })
-            res.status(200).json({ msg:'Registered successfully' })
+            return res.status(201).json({ msg:'Registered successfully' })
         }else{
-            res.status(400).json({errMsg: 'Email alredy exists'})
+           return res.status(400).json({errMsg: 'Email already exists'})
         }
     } catch (error) {
-        res.status(500).json({errMsg: 'Server error'})
+        console.log(error);
+        return res.status(500).json({errMsg: 'Server error'})
     }
 }
 
@@ -54,7 +50,7 @@ const login = async (req, res) => {
         if (userDetails) {
             if(userDetails.is_blocked){ 
                 response.message = 'account suspended!!'
-                res.status(400).json({ response }) }
+                return res.status(400).json({ response }) }
                 else{
                     if(req.body?.password){
                         isMatch = await bcrypt.compare(req.body.password,userDetails.password) 
@@ -71,21 +67,21 @@ const login = async (req, res) => {
                         let token = response.token;
                         let name = response.name;
                         const obj = { token, name }
-                res.cookie("jwt", obj, {
+                return res.cookie("jwt", obj, {
                     httpOnly: false,
                     maxAge: 6000 * 1000
                 }).status(200).json({ response });
             } else {
                 response.message = 'Password is wrong!!';
-                res.status(400).json({ response });
+                return res.status(400).json({ response });
             }
         }
         } else{
             response.message = 'User does not exist!!';
-            res.status(400).json({ response });
+            return res.status(400).json({ response });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 }
 
@@ -209,18 +205,18 @@ const tutorload=async(req,res)=>{
 const loadUserPanel=async(req,res)=>{
     try {
        const userId = new mongoose.Types.ObjectId(req.user._id)
+       const userData = await usermodel.findOne({_id:userId},{email:1,image:1,mobile:1,name:1,wallet:1})
 
-       const userData = await usermodel.findOne({_id:userId},{email:1,image:1,mobile:1,name:1})
        const purchaseData = await orderModel.find({user_id : userId})
        .populate({
         path: 'course_id',
         select: 'title'})
 
-       const course_ids =  purchaseData.map((obj)=>obj.course_id)
+       const course_ids =  purchaseData.map((obj)=>obj.status==='success'? obj.course_id : null)
        const modules = await moduleModel.find({courseId : {$in : course_ids}},{chapters : 0})
 
        if(userData && purchaseData){
-           return res.status(200).json({purchaseData : purchaseData,userData: userData,moduleData:modules})
+           return res.status(200).json({purchaseData: purchaseData, userData: userData, moduleData:modules})
        }
     } catch (error) {
         res.status(500)
@@ -262,8 +258,12 @@ const moduleCompleted=async(req,res)=>{
     try {
         const userId = new mongoose.Types.ObjectId(req.user._id)
         const moduleId = req.body.module_id
-        const data = await moduleModel.updateOne({_id:moduleId},{$addToSet :{completed_users : userId}})
-        data ? res.status(200).json({message : 'Next module unlocked!!'}) : res.status(500)
+        const module_index = req.body.module_index
+        const module = await moduleModel.findByIdAndUpdate({_id:moduleId},{$addToSet :{completed_users : userId}})
+        if(module_index===0){
+            await orderModel.updateOne({course_id:module.courseId,user_id:userId},{$set:{is_refundable:false}})
+        }
+        module ? res.status(200).json({message : 'Next module unlocked!!'}) : res.status(500)
     } catch (error) {
         res.status(500)
         console.log(error);
@@ -296,6 +296,36 @@ const loadPurchasedCourses=async(req,res)=>{
      }
 }
 
+const cancelPurchase = async (req, res) => {
+    try {
+      const order_id = req.body.order_id;
+      const feedback = req.body.feedback;
+      const updatedData = await orderModel.findByIdAndUpdate(order_id,{ $set: {is_refundable: false,user_message: feedback,status:'refunded'}});
+
+      if (updatedData) {
+        const user_id = new mongoose.Types.ObjectId(req.user._id);
+        const wallet = req.body.wallet;
+  
+        const update = await usermodel.updateOne(
+          { _id: user_id },
+          { $set: { wallet: wallet + updatedData.amount } }
+        );
+
+        if (update ) {
+          return res.status(200).json({ message: 'Amount refunded to wallet'});
+        } else {
+          return res.status(500).json({ message: 'Failed to update wallet' });
+        }
+      } else {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
+
 
 module.exports = {
     register,
@@ -309,5 +339,6 @@ module.exports = {
     updateImage,
     loadModules,
     moduleCompleted,
-    loadPurchasedCourses
+    loadPurchasedCourses,
+    cancelPurchase
 }

@@ -115,10 +115,10 @@ const rejectTutorReq =async(req,res)=>{
 const tutorslist =async(req,res)=>{
     try {
         const tutorData =  await userModel.find({is_tutor : true})
-        tutorData ? res.status(200).json({result : tutorData})
-        : res.status(500)
+        return tutorData ? res.status(200).json({result : tutorData}) : res.status(500)
     } catch (error) {
         console.log(error.message);
+        return res.status(500)
     }
 }
 
@@ -128,13 +128,13 @@ const toggleBlockTutor=async(req,res)=>{
         const success =  await userModel.updateOne({_id:req.query.id},{$set :{is_blocked : req.query.blockToggle}})
         if(success){
            const tutorData =  await userModel.find({is_tutor : true})
-           res.status(200).json({result : tutorData})
+           return res.status(200).json({result : tutorData})
          }else{
-             res.status(500)
+            return res.status(500)
          }
     } catch (error) {
         console.log(error);
-        res.status(500)
+        return res.status(500)
     }
 }
 

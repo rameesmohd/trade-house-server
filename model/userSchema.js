@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
         image: {
             type : String
         },
+        wallet : {
+            type : Number,
+            default : 0.00
+        },
+        //<<<<<<-------------tutor----------->>>>>>>>
         firstName :{
             type : String
         },
@@ -68,7 +73,9 @@ const userSchema = new mongoose.Schema(
         about_me :{
             type : String
         },
-       
+        t_wallet :{
+            type: Number
+        }
     }
 )
 

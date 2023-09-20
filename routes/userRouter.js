@@ -21,7 +21,8 @@ router.post('/verifyRazorpay',paymentController.verifyrzpay)
 router.get('/userpanel',userController.loadUserPanel)
 router.patch('/image',userController.updateImage)
 router.get('/loadmodule/:module_id',userController.loadModules)
-router.post('/module-completed',userController.moduleCompleted)
+router.patch('/module-completed',userController.moduleCompleted)
 router.get('/purchased-courses',userController.loadPurchasedCourses)
+router.patch('/cancel-purchase',userController.cancelPurchase)
 
 module.exports = router;

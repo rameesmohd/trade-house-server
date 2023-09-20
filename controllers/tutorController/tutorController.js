@@ -9,30 +9,30 @@ const moduleModel = require('../../model/moduleSchema')
 
 const initialVerify =async(req,res)=>{
     try {
-        const {email,password} = req.body
-        if(email && password){
-            const tutor =  await userModel.findOne({email : email,is_tutor : true,is_blocked:false})
-
-            const isMatch = bcrypt.compare(password,tutor.password) 
+    const {email,password} = req.body
+    const tutor =  await userModel.findOne({email : email,is_tutor : true,is_blocked:false})
+    if(!tutor)
+            return res.status(404).json({message : 'User not found!!'}) 
+    else{
+        if(password){
+            const isMatch = await bcrypt.compare(password,tutor.password)
             if(isMatch){
-                if(tutor){
+                    console.log(isMatch);
                     const token = generateTutorToken(tutor._id)
                     res.cookie("jwt", {token : token}, {
                         httpOnly: false,
                         maxAge: 6000 * 1000
-                    }).status(200).json({token : token,id :tutor._id,profile :tutor})
-                }else{
-                    res.status(400).json({message : 'Unautherised access!!'})
-                }
+                    }).status(200).json({token : token,id :tutor._id})
             }else{
-            res.status(400).json({message : 'password incurrect!!'})
+                return res.status(400).json({message : 'password incurrect!!'})
             }
         }else{
-            res.status(400).json({message : 'Unautherised access!!'})
+            return res.status(400).json({message : 'Unautherised access!!'})
         }
+    }
     } catch (error) {
         console.log(error);
-        res.status(500)
+        return res.status(500)
     }
 }
 
@@ -264,7 +264,9 @@ const addChapter=async(req,res)=>{
         const data =  await moduleModel.updateOne({_id:moduleId},{$push:{chapters :{chapter_title : title}}})
         const modules = await moduleModel.find({courseId : courseId})
         console.log(modules);
-        data && res.status(200).json({result:modules,message: 'Chapter added successfully'}) 
+        if(data){
+            return res.status(200).json({result:modules,message: 'Chapter added successfully'}) 
+        }
     } catch (error) {
         console.log(error);
         res.status(500)
@@ -302,7 +304,7 @@ const updateChapter=async(req,res)=>{
         }
     } catch (error) {
         console.log(error);
-        res.status(500)
+        return res.status(500)
     }
 }
 
@@ -322,10 +324,10 @@ const deleteChapter=async(req,res)=>{
             console.log('Chapter not found or not removed.');
           }
           const modules = await moduleModel.find({ courseId: courseId });
-          res.status(200).json({result : modules})
+          return res.status(200).json({result : modules})
     } catch (error) {
-        res.status(500)
         console.log(error.message);
+        return res.status(500)
     }
 }
 

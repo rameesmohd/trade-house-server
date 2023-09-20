@@ -22,6 +22,22 @@ const orderSchema = new mongoose.Schema({
     amount : {
         type : Number,
         require : true
+    },
+    status:{
+        type : String,
+        default : 'success'
+    },
+    is_refundable :{
+        type: Boolean,
+        default : true
+    },
+    user_message :{
+        type: String
+    },
+    learning_progress :{
+        type: Number,
+        max : 100,
+        default: 0
     }
 })
 
