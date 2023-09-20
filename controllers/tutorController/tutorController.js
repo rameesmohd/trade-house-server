@@ -279,7 +279,6 @@ const updateChapter=async(req,res)=>{
         const currVideo = req.body.video
         const video = req.files.video ? req.files.video[0] : null
         let VideoURL;  
-        console.log(currVideo);
         if(video){
             await cloudinary.uploader.upload(video.path,{ resource_type: "video",
             public_id: "video_upload_example"
@@ -288,6 +287,7 @@ const updateChapter=async(req,res)=>{
                 fs.unlinkSync(video.path)
             }).catch((err) => {
                 fs.unlinkSync(video.path)
+                return res.status(500).json({message : 'Network error'})
                 console.log(err)
             });
         }
@@ -297,8 +297,9 @@ const updateChapter=async(req,res)=>{
                 chapter_title: title, 
                 video: VideoURL ? VideoURL: currVideo, 
             }}})
-        update && res.status(200)
-        .json({message : 'Updated successfully',video : VideoURL ? VideoURL : currVideo ,chapter_title : title})
+        if(update){
+            return res.status(200).json({message : 'Updated successfully',video : VideoURL ? VideoURL : currVideo ,chapter_title : title})
+        }
     } catch (error) {
         console.log(error);
         res.status(500)

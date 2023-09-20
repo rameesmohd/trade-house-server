@@ -3,7 +3,8 @@ const mongoose = require('mongoose')
 
 const categoryModel = new mongoose.Schema({
     category : {
-        type : String
+        type : String,
+        uppercase : true
     },
     is_flaged : {
         type : Boolean,

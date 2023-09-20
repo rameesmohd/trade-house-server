@@ -11,7 +11,7 @@ function createMulter() {
     });
 
     const upload = multer({ storage: storage });
-    return upload;
+    return upload
 }
 
 

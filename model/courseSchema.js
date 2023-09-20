@@ -55,6 +55,10 @@ const courseSchema = new mongoose.Schema({
     ],
     total_rating : {
         type : Number
+    },
+    total_purchases :{
+        type : Number,
+        default : 0
     }
 })
 

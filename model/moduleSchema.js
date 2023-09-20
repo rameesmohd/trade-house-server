@@ -16,11 +16,24 @@ const moduleSchema = new mongoose.Schema({
         },
         video : {
             type :String
-        } 
-        }
+        },
+        watched_by_users :[
+            {
+                user_id : {
+                    type :mongoose.Schema.Types.ObjectId,
+                    ref : 'users'
+                },
+                watched_users : {
+                    type : Array
+                }
+            }
+        ]}
     ],
     notes : {
         type: String
+    },
+    completed_users: {
+        type : Array
     }
 })
 

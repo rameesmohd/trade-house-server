@@ -5,6 +5,10 @@ const nodeMailer = require('nodemailer')
 const fs = require('fs')
 const cloudinary = require('../../config/cloudinary');
 const courseModel = require('../../model/courseSchema');
+const orderModel = require('../../model/orderSchema');
+const moduleModel = require('../../model/moduleSchema')
+const jwt = require('jsonwebtoken');
+const { default: mongoose } = require('mongoose');
 let errMsg,msg;
 
 const register = async(req,res)=>{
@@ -178,8 +182,13 @@ const submitRequest= async(req,res)=>{
 
 const allCourses=async(req,res)=>{
     try {
-        const courses = await courseModel.find({is_active:true}).populate('tutor').populate('category')
-        courses ? res.status(200).json({result : courses}) : res.status(500)
+        const courses = await courseModel.find({ is_active: true })
+        .populate({
+            path: 'tutor',
+            select: 'firstName lastName image experience type_of_trader about_me'
+        })
+        .populate('category');
+       return courses ?  res.status(200).json({result : courses}) : res.status(500)
     } catch (error) {
         console.log(error.message);
         res.status(500)
@@ -190,12 +199,103 @@ const tutorload=async(req,res)=>{
     try {
         const email = req.query.email
         const userData =  await usermodel.findOne({email: email})
-        res.status(200).json({result : userData})
+        return res.status(200).json({result : userData})
     } catch (error) {
         console.log(error);
         res.status(500)
     }
 }
+
+const loadUserPanel=async(req,res)=>{
+    try {
+       const userId = new mongoose.Types.ObjectId(req.user._id)
+
+       const userData = await usermodel.findOne({_id:userId},{email:1,image:1,mobile:1,name:1})
+       const purchaseData = await orderModel.find({user_id : userId})
+       .populate({
+        path: 'course_id',
+        select: 'title'})
+
+       const course_ids =  purchaseData.map((obj)=>obj.course_id)
+       const modules = await moduleModel.find({courseId : {$in : course_ids}},{chapters : 0})
+
+       if(userData && purchaseData){
+           return res.status(200).json({purchaseData : purchaseData,userData: userData,moduleData:modules})
+       }
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+const updateImage=async(req,res)=>{
+    try {
+        if(req.body.imageUrlData && req.body.id){
+            const Updated = await usermodel.findByIdAndUpdate({_id :req.body.id},{$set :{image : req.body.imageUrlData}})
+            if(Updated){
+             res.status(200).json({message : 'updated successfully'})
+            }
+         }
+        console.log(req.body);
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+const loadModules=async(req,res)=>{
+    const {module_id} = req.params 
+    try {
+        const moduleData = await moduleModel.findById(module_id)
+        if(!moduleData){
+            return res.status(404).json({message : 'module not found'})
+        }else{
+            return res.status(200).json({moduleData : moduleData})
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({message : 'sever error'})
+    }   
+}
+
+const moduleCompleted=async(req,res)=>{
+    try {
+        const userId = new mongoose.Types.ObjectId(req.user._id)
+        const moduleId = req.body.module_id
+        const data = await moduleModel.updateOne({_id:moduleId},{$addToSet :{completed_users : userId}})
+        data ? res.status(200).json({message : 'Next module unlocked!!'}) : res.status(500)
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+const loadPurchasedCourses=async(req,res)=>{
+     try {
+        let purchasedCourses = []
+        const user = new mongoose.Types.ObjectId(req.user._id);
+        const purchased = await orderModel.aggregate([
+            {
+                $match:{
+                    user_id : user._id
+                }
+            },
+            {
+                $project:{
+                    course_id : 1,
+                    _id:0
+                }
+            }
+            ])
+        
+        purchased.length ? purchasedCourses = purchased.map((obj)=>obj.course_id) : null 
+        res.status(200).json({result : purchasedCourses})
+     } catch (error) {
+        console.log(error);
+        res.status(500)
+     }
+}
+
 
 module.exports = {
     register,
@@ -204,5 +304,10 @@ module.exports = {
     forgetPassword,
     submitRequest,
     allCourses,
-    tutorload
+    tutorload,
+    loadUserPanel,
+    updateImage,
+    loadModules,
+    moduleCompleted,
+    loadPurchasedCourses
 }

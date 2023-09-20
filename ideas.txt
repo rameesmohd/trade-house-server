@@ -1,0 +1,159 @@
+const mongoose = require('mongoose');
+
+const moduleSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    courseId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'course'
+    },
+    chapters: [{
+        chapter_title: {
+            type: String,
+            required: true
+        },
+        video: {
+            type: String
+        },
+        watched: {
+            type: Boolean,
+            default: false  // Initially, all chapters are locked
+        }
+    }],
+    notes: {
+        type: String
+    }
+});
+
+const moduleModel = mongoose.model('module', moduleSchema);
+
+module.exports = moduleModel;
+
+
+// Assuming you have an API route like '/api/watch-chapter/:moduleId/:chapterIndex'
+app.post('/api/watch-chapter/:moduleId/:chapterIndex', async (req, res) => {
+    const { moduleId, chapterIndex } = req.params;
+
+    try {
+        const module = await moduleModel.findById(moduleId);
+
+        if (!module) {
+            return res.status(404).json({ message: 'Module not found' });
+        }
+
+        if (chapterIndex < module.chapters.length) {
+            module.chapters[chapterIndex].watched = true;
+            await module.save();
+            return res.status(200).json({ message: 'Chapter marked as watched' });
+        } else {
+            return res.status(404).json({ message: 'Chapter not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+
+const mongoose = require('mongoose');
+
+const moduleSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    courseId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'course'
+    },
+    chapters: [{
+        chapter_title: {
+            type: String,
+            required: true
+        },
+        video: {
+            type: String
+        },
+        watched: {
+            type: Boolean,
+            default: false
+        }
+    }],
+    notes: {
+        type: String
+    }
+});
+
+const courseSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    modules: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'module'
+    }],
+    // Track overall progress of the user
+    overallProgress: {
+        type: Number,
+        default: 0
+    }
+});
+
+const moduleModel = mongoose.model('module', moduleSchema);
+const courseModel = mongoose.model('course', courseSchema);
+
+module.exports = { moduleModel, courseModel };
+
+
+// Assuming you have an API route like '/api/watch-chapter/:moduleId/:chapterIndex'
+app.post('/api/watch-chapter/:moduleId/:chapterIndex', async (req, res) => {
+    const { moduleId, chapterIndex } = req.params;
+
+    try {
+        const module = await moduleModel.findById(moduleId);
+
+        if (!module) {
+            return res.status(404).json({ message: 'Module not found' });
+        }
+
+        if (chapterIndex < module.chapters.length) {
+            module.chapters[chapterIndex].watched = true;
+            await module.save();
+
+            // Update the overall progress for the course
+            const course = await courseModel.findOne({ modules: moduleId });
+            if (course) {
+                course.overallProgress = calculateOverallProgress(course.modules);
+                await course.save();
+            }
+
+            return res.status(200).json({ message: 'Chapter marked as watched' });
+        } else {
+            return res.status(404).json({ message: 'Chapter not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Helper function to calculate overall progress based on watched chapters
+function calculateOverallProgress(modules) {
+    let totalChapters = 0;
+    let watchedChapters = 0;
+
+    for (const module of modules) {
+        totalChapters += module.chapters.length;
+        for (const chapter of module.chapters) {
+            if (chapter.watched) {
+                watchedChapters++;
+            }
+        }
+    }
+
+    // Calculate progress as a percentage
+    return (watchedChapters / totalChapters) * 100;
+}

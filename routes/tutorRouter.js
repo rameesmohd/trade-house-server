@@ -5,7 +5,6 @@ const {verifyToken} = require('../middleware/tutorAuth')
 const multer = require('../config/multer')
 const upload = multer.createMulter()
 
-// router.get('/verify',tutorController.initialVerify)
 router.post('/login',tutorController.initialVerify)
 
 

@@ -140,7 +140,7 @@ const toggleBlockTutor=async(req,res)=>{
 
 const addCategory=async(req,res)=>{
     try {
-        console.log(req.body);
+        console.log(req.body.newCategory);
         const catogary = new categoryModel({
             category : req.body.newCategory
         })
@@ -180,7 +180,17 @@ const updateCategory=async(req,res)=>{
 
 const allCourses=async(req,res)=>{
     try {
-        const allCourses = await courseModel.find({}).populate('category').populate('tutor') 
+        console.log('ddddddd');
+        const count = req.query.count
+        const allCourses = await courseModel.find({}).skip(count).limit(4)
+        .populate({
+            path:'category',
+            select : 'category'
+        })
+        .populate({
+            path:'tutor',
+            select : 'firstName lastName image'
+        }) 
         res.status(200).json({result : allCourses})
     } catch (error) {
         console.log(error);

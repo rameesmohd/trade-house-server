@@ -10,6 +10,8 @@ const paymentModeHandle = async (req, res) => {
     const userId = req.user._id
     const { methord } = req.params
     const course = req.body
+    console.log(methord);
+    console.log(req);
     if(methord === 'strip'){
         const date_of_purchase = new Date()
         const amount = course.price
@@ -55,7 +57,7 @@ const paymentModeHandle = async (req, res) => {
           currency: "INR"
         };
         
-        instance.orders.create(datas, function (err, order) {
+       instance.orders.create(datas, function (err, order) {
           if (err) {
             console.error("Error creating Razorpay order:", err);
             return res.status(500).json({ status: false });
