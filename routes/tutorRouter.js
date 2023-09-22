@@ -29,6 +29,8 @@ router.get('/profile',tutorController.tutorProfile)
 router.get('/category',tutorController.loadCategory)
 router.patch('/about',tutorController.updateAbout)
 router.patch('/image',tutorController.updateImage)
+router.get('/my-students',tutorController.myStudentsLoad)
+router.get('/overview',tutorController.overViewLoad)
     
 
 module.exports = router

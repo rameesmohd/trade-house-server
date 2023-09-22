@@ -206,15 +206,12 @@ const loadUserPanel=async(req,res)=>{
     try {
        const userId = new mongoose.Types.ObjectId(req.user._id)
        const userData = await usermodel.findOne({_id:userId},{email:1,image:1,mobile:1,name:1,wallet:1})
-
        const purchaseData = await orderModel.find({user_id : userId})
        .populate({
         path: 'course_id',
         select: 'title'})
-
        const course_ids =  purchaseData.map((obj)=>obj.status==='success'? obj.course_id : null)
        const modules = await moduleModel.find({courseId : {$in : course_ids}},{chapters : 0})
-
        if(userData && purchaseData){
            return res.status(200).json({purchaseData: purchaseData, userData: userData, moduleData:modules})
        }
@@ -261,9 +258,48 @@ const moduleCompleted=async(req,res)=>{
         const module_index = req.body.module_index
         const module = await moduleModel.findByIdAndUpdate({_id:moduleId},{$addToSet :{completed_users : userId}})
         if(module_index===0){
-            await orderModel.updateOne({course_id:module.courseId,user_id:userId},{$set:{is_refundable:false}})
+            const updatedOrder = await orderModel.findOneAndUpdate(
+                { course_id: module.courseId, user_id: userId },
+                { $set: { is_refundable: false } },
+                { new: true }
+              ).populate({
+                    path:'course_id',
+                    select:'tutor '
+                }).exec();
+              
+            const tutorPerc = Math.floor(updatedOrder.amount * 0.75);
+            const adminPerc = Math.floor(updatedOrder.amount * 0.25);
+              
+            const t_update =  await usermodel.updateOne(
+                { _id: updatedOrder.course_id.tutor },
+                {
+                  $inc: { b_wallet_balance: tutorPerc },
+                  $push: {
+                    b_wallet_transaction: {
+                      order_id : updatedOrder._id,  
+                      amount: tutorPerc,
+                      transaction_type: 'credit'
+                    }
+                  }
+                }
+              );
+              
+            const a_update = await usermodel.updateOne(
+                { email: 'admin@gmail.com' },
+                {
+                  $inc: { b_wallet_balance: adminPerc },
+                  $push: {
+                    b_wallet_transaction: {
+                      order_id : updatedOrder._id,  
+                      amount: adminPerc,
+                      transaction_type: 'credit'
+                    }
+                  }
+                }
+            )   
+            console.log(t_update,a_update);
         }
-        module ? res.status(200).json({message : 'Next module unlocked!!'}) : res.status(500)
+        return module ? res.status(200).json({message : 'Next module unlocked!!'}) : res.status(500)
     } catch (error) {
         res.status(500)
         console.log(error);
@@ -277,7 +313,8 @@ const loadPurchasedCourses=async(req,res)=>{
         const purchased = await orderModel.aggregate([
             {
                 $match:{
-                    user_id : user._id
+                    user_id : user._id,
+                    status : 'success'
                 }
             },
             {
@@ -287,9 +324,8 @@ const loadPurchasedCourses=async(req,res)=>{
                 }
             }
             ])
-        
         purchased.length ? purchasedCourses = purchased.map((obj)=>obj.course_id) : null 
-        res.status(200).json({result : purchasedCourses})
+        return res.status(200).json({result : purchasedCourses})
      } catch (error) {
         console.log(error);
         res.status(500)
@@ -301,7 +337,6 @@ const cancelPurchase = async (req, res) => {
       const order_id = req.body.order_id;
       const feedback = req.body.feedback;
       const updatedData = await orderModel.findByIdAndUpdate(order_id,{ $set: {is_refundable: false,user_message: feedback,status:'refunded'}});
-
       if (updatedData) {
         const user_id = new mongoose.Types.ObjectId(req.user._id);
         const wallet = req.body.wallet;
@@ -321,9 +356,22 @@ const cancelPurchase = async (req, res) => {
       }
     } catch (error) {
       console.error(error.message);
-      res.status(500).json({ message: 'Server error' });
+      return res.status(500).json({ message: 'Server error' });
     }
   };
+
+const updateLearningProgress=async(req,res)=>{
+    try {
+        console.log(req.body);
+        const progress = await orderModel.updateOne({_id:req.body.order_id},{$set:{learning_progress : req.body.progress}})
+        if(progress){
+            return res.status(200)
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500)
+    }
+}
   
 
 
@@ -340,5 +388,6 @@ module.exports = {
     loadModules,
     moduleCompleted,
     loadPurchasedCourses,
-    cancelPurchase
+    cancelPurchase,
+    updateLearningProgress
 }

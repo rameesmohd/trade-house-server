@@ -24,5 +24,6 @@ router.get('/loadmodule/:module_id',userController.loadModules)
 router.patch('/module-completed',userController.moduleCompleted)
 router.get('/purchased-courses',userController.loadPurchasedCourses)
 router.patch('/cancel-purchase',userController.cancelPurchase)
+router.patch('/update-progress',userController.updateLearningProgress)
 
 module.exports = router;

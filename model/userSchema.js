@@ -73,9 +73,25 @@ const userSchema = new mongoose.Schema(
         about_me :{
             type : String
         },
-        t_wallet :{
-            type: Number
-        }
+        b_wallet_balance :{
+            type: Number,
+            default : 0
+        },
+        b_wallet_transaction:[
+            {
+                order_id:{
+                    type:mongoose.Types.ObjectId 
+                },
+                amount:{
+                    type: Number,
+                    require : true
+                },
+                transaction_type :{
+                    type : String,
+                    require : true
+                }
+            }
+        ]
     }
 )
 

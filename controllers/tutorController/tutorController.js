@@ -5,7 +5,9 @@ const fs = require('fs')
 const bcrypt = require('bcrypt')
 const courseModel = require('../../model/courseSchema')
 const categoryModel = require('../../model/categorySchema')
-const moduleModel = require('../../model/moduleSchema')
+const moduleModel = require('../../model/moduleSchema');
+const { default: mongoose } = require('mongoose');
+const orderModel = require('../../model/orderSchema');
 
 const initialVerify =async(req,res)=>{
     try {
@@ -290,7 +292,6 @@ const updateChapter=async(req,res)=>{
             }).catch((err) => {
                 fs.unlinkSync(video.path)
                 return res.status(500).json({message : 'Network error'})
-                console.log(err)
             });
         }
         const update = await moduleModel.updateOne(
@@ -331,6 +332,75 @@ const deleteChapter=async(req,res)=>{
     }
 }
 
+const myStudentsLoad=async(req,res)=>{
+    try {
+        const tutor_id = new mongoose.Types.ObjectId(req.user._id);
+        const myCourses = await courseModel.find({tutor:tutor_id})
+        const myCourse_ids = myCourses.map((course)=>course._id)
+        const myCoursePurchases = await orderModel.find({course_id : {$in : myCourse_ids}},
+            {date_of_purchase :1,learning_progress:1}).populate({
+            path: 'user_id',
+            select : 'name email mobile image'
+        }).populate({
+            path : 'course_id',
+            select : 'title'
+        })
+        return res.status(200).json({result : myCoursePurchases})
+    } catch (error) {
+        console.log(error);
+        return res.status(500)
+    }
+}
+
+const overViewLoad = async (req, res) => {
+    try {
+        console.log(req.query);
+      const expand =req.query.expand === "true"
+        console.log(expand);
+      const tutor_id = new mongoose.Types.ObjectId(req.user._id);
+  
+      const transaction = await userModel
+        .findOne({ _id: tutor_id }, { b_wallet_balance: 1, b_wallet_transaction: 1 })
+        .exec();
+  
+      const myCourses = await courseModel.find({ tutor: tutor_id }, { id: 1 })
+      let recentSales;
+    if(expand){
+            recentSales = await orderModel
+            .find({ course_id: { $in: myCourses } })
+            .sort({ date_of_purchase: -1 })
+            .populate({
+                path : 'user_id',
+                select : 'name email'
+            })
+            .populate({
+                path : 'course_id',
+                select : 'title'
+            })
+            .exec();
+    }else{
+            recentSales = await orderModel
+            .find({ course_id: { $in: myCourses } })
+            .sort({ date_of_purchase: -1 })
+            .limit(5)
+            .populate({
+                path : 'user_id',
+                select : 'name email'
+            })
+            .populate({
+                path : 'course_id',
+                select : 'title'
+            })
+            .exec();
+    }
+      res.status(200).json({ transaction: transaction, recentSales: recentSales });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+  
+
 module.exports= {
     initialVerify,
     addCourse,
@@ -346,5 +416,7 @@ module.exports= {
     updateModule,
     addChapter,
     updateChapter,
-    deleteChapter
+    deleteChapter,
+    myStudentsLoad,
+    overViewLoad
 }
