@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router();
 const userController = require('../controllers/userController/userController')
 const paymentController = require('../controllers/paymentController/paymentController')
+const chatController = require('../controllers/chatController/chatController')
 const multer = require('../config/multer');
 const upload = multer.createMulter();
 const {verifyToken} = require('../middleware/userAuth')
@@ -10,8 +11,10 @@ router.post('/signup',userController.register);
 router.post('/login',userController.login);
 router.post('/forgetpasswordauth',userController. forgetPasswordAuth);
 router.post('/forgetpassword',userController. forgetPassword);
-router.get('/all-courses',userController.allCourses)
 router.get('/payments',paymentController.paymentStatusHandle)
+router.get('/categories',userController.categoryLoad)
+router.get('/courses',userController.allCourses)
+router.post('/contact',userController.contactUs)
 
 router.use(verifyToken)
 router.post('/tutor-request',upload.single('file'),userController.submitRequest);
@@ -26,4 +29,11 @@ router.get('/purchased-courses',userController.loadPurchasedCourses)
 router.patch('/cancel-purchase',userController.cancelPurchase)
 router.patch('/update-progress',userController.updateLearningProgress)
 
+router.route('/chat')
+    .get(chatController.fetchChats)
+    .post(chatController.accessChat)
+router.route('/message')
+    .get(chatController.allMessages)
+    .post(chatController.sendMessage)
+    
 module.exports = router;

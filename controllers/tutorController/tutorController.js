@@ -337,8 +337,8 @@ const myStudentsLoad=async(req,res)=>{
         const tutor_id = new mongoose.Types.ObjectId(req.user._id);
         const myCourses = await courseModel.find({tutor:tutor_id})
         const myCourse_ids = myCourses.map((course)=>course._id)
-        const myCoursePurchases = await orderModel.find({course_id : {$in : myCourse_ids}},
-            {date_of_purchase :1,learning_progress:1}).populate({
+        const myCoursePurchases = await orderModel.find({status : {$ne : 'refunded'},course_id : {$in : myCourse_ids}},
+            {date_of_purchase :1,learning_progress:1,status:1}).populate({
             path: 'user_id',
             select : 'name email mobile image'
         }).populate({
@@ -354,31 +354,109 @@ const myStudentsLoad=async(req,res)=>{
 
 const overViewLoad = async (req, res) => {
     try {
-        console.log(req.query);
+      console.log(req.query);
+      const filter = req.query.filter
+      let fromDate = req.query.from
+      let toDate = req.query.to 
       const expand =req.query.expand === "true"
-        console.log(expand);
       const tutor_id = new mongoose.Types.ObjectId(req.user._id);
-  
       const transaction = await userModel
         .findOne({ _id: tutor_id }, { b_wallet_balance: 1, b_wallet_transaction: 1 })
         .exec();
-  
       const myCourses = await courseModel.find({ tutor: tutor_id }, { id: 1 })
       let recentSales;
-    if(expand){
-            recentSales = await orderModel
-            .find({ course_id: { $in: myCourses } })
-            .sort({ date_of_purchase: -1 })
-            .populate({
-                path : 'user_id',
-                select : 'name email'
-            })
-            .populate({
-                path : 'course_id',
-                select : 'title'
-            })
-            .exec();
+    if(fromDate && toDate){
+        recentSales = await orderModel
+          .find({
+            course_id: { $in: myCourses },
+            date_of_purchase: { $gte: fromDate, $lte: toDate },
+          })
+          .sort({ date_of_purchase: -1 })
+          .populate({
+            path : 'course_id',
+            select : 'title',
+            populate: {
+                path: 'tutor', 
+                select: 'firstName lastName '
+            }
+        }).populate({
+            path:'user_id',
+            select : 'name email'
+        }).exec();
     }else{
+    if(expand){
+        if (filter === 'Daily') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            const tomorrow = new Date();
+            tomorrow.setHours(23, 59, 59, 999); 
+            recentSales = await orderModel
+              .find({
+                course_id: { $in: myCourses },
+                date_of_purchase: { $gte: today, $lte: tomorrow },
+              })
+              .sort({ date_of_purchase: -1 })
+              .populate({
+                path: 'user_id',
+                select: 'name email',
+              })
+              .populate({
+                path: 'course_id',
+                select: 'title',
+              })
+              .exec();
+          } else if (filter === 'Weekly') {
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+          
+            recentSales = await orderModel
+              .find({
+                course_id: { $in: myCourses },
+                date_of_purchase: { $gte: lastWeek },
+              })
+              .sort({ date_of_purchase: -1 })
+              .populate({
+                path: 'user_id',
+                select: 'name email',
+              })
+              .populate({
+                path: 'course_id',
+                select: 'title',
+              })
+              .exec();
+          } else if (filter === 'Yearly') {
+            const lastYear = new Date();
+            lastYear.setFullYear(lastYear.getFullYear() - 1);
+            recentSales = await orderModel
+              .find({
+                course_id: { $in: myCourses },
+                date_of_purchase: { $gte: lastYear },
+              })
+              .sort({ date_of_purchase: -1 })
+              .populate({
+                path: 'user_id',
+                select: 'name email',
+              })
+              .populate({
+                path: 'course_id',
+                select: 'title',
+              })
+              .exec();
+          } else {
+            recentSales = await orderModel
+              .find({ course_id: { $in: myCourses } })
+              .sort({ date_of_purchase: -1 })
+              .populate({
+                path: 'user_id',
+                select: 'name email',
+              })
+              .populate({
+                path: 'course_id',
+                select: 'title',
+              })
+              .exec();
+          }
+        }else{
             recentSales = await orderModel
             .find({ course_id: { $in: myCourses } })
             .sort({ date_of_purchase: -1 })
@@ -392,14 +470,15 @@ const overViewLoad = async (req, res) => {
                 select : 'title'
             })
             .exec();
-    }
-      res.status(200).json({ transaction: transaction, recentSales: recentSales });
+        }}     
+    return res.status(200).json({ transaction: transaction, recentSales: recentSales });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   };
-  
+
+
 
 module.exports= {
     initialVerify,
@@ -418,5 +497,5 @@ module.exports= {
     updateChapter,
     deleteChapter,
     myStudentsLoad,
-    overViewLoad
+    overViewLoad,
 }

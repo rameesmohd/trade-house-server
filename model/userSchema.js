@@ -89,6 +89,10 @@ const userSchema = new mongoose.Schema(
                 transaction_type :{
                     type : String,
                     require : true
+                },
+                date:{
+                    type : Date,
+                    requires : true
                 }
             }
         ]

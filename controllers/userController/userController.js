@@ -7,6 +7,8 @@ const cloudinary = require('../../config/cloudinary');
 const courseModel = require('../../model/courseSchema');
 const orderModel = require('../../model/orderSchema');
 const moduleModel = require('../../model/moduleSchema')
+const contactModel = require('../../model/contactSchema')
+const categoryModel = require('../../model/categorySchema')
 const jwt = require('jsonwebtoken');
 const { default: mongoose } = require('mongoose');
 let errMsg,msg;
@@ -178,17 +180,53 @@ const submitRequest= async(req,res)=>{
 
 const allCourses=async(req,res)=>{
     try {
-        const courses = await courseModel.find({ is_active: true })
-        .populate({
-            path: 'tutor',
-            select: 'firstName lastName image experience type_of_trader about_me'
-        })
-        .populate('category');
-       return courses ?  res.status(200).json({result : courses}) : res.status(500)
-    } catch (error) {
-        console.log(error.message);
-        res.status(500)
-    }
+        console.log(req.query)
+        const { category, level, price ,search} = req.query;
+        const [variable1, variable2] = price.split(',').map(Number);
+        
+        const searchQuery = {
+            $or: [
+            { title: { $regex: new RegExp(search, 'i') } }, 
+            { 'tutor.firstName': { $regex: new RegExp(search, 'i') } }, 
+            { 'tutor.lastName': { $regex: new RegExp(search, 'i') } }
+            ]
+        }
+            
+        const findQuery = {
+          is_active: true,
+          ...(category !== 'All' && { category }),
+          ...(level !== 'All' && { level }),
+          ...(price !== 'All' && { price: { $gte: variable1, $lt: variable2 }}),
+          ...(search !== 'All' && (isNaN(Number(search)) ? searchQuery : { price: Number(search) }))
+        };
+          
+        let courses = await courseModel
+          .find(findQuery)
+          .populate('tutor','firstName lastName image experience type_of_trader about_me')
+          .populate('category');
+        
+        // if(!courses.length&&search!=='All'){
+        //     const tutorsearchQuery = {
+        //         $or: [
+        //           { firstName: { $regex: new RegExp(search, 'i') } },
+        //           { lastName: { $regex: new RegExp(search, 'i') } }
+        //         ]
+        //     };
+        //     const tutorMatches = await usermodel.find(tutorsearchQuery, '_id');
+        //     const tutorIds = tutorMatches.map((tutor) => tutor._id);
+        //     courses = await courseModel
+        //     .find( { tutor: { $in: tutorIds } })
+        //     .populate('tutor','firstName lastName image experience type_of_trader about_me')
+        //     .populate('category');
+        // }
+
+        return courses
+          ? res.status(200).json({ result: courses })
+          : res.status(500).json({ error: 'Courses not found' });
+      } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ error: 'Internal server error' });
+      }      
 }
 
 const tutorload=async(req,res)=>{
@@ -278,7 +316,8 @@ const moduleCompleted=async(req,res)=>{
                     b_wallet_transaction: {
                       order_id : updatedOrder._id,  
                       amount: tutorPerc,
-                      transaction_type: 'credit'
+                      transaction_type: 'credit',
+                      date : new Date()
                     }
                   }
                 }
@@ -292,7 +331,8 @@ const moduleCompleted=async(req,res)=>{
                     b_wallet_transaction: {
                       order_id : updatedOrder._id,  
                       amount: adminPerc,
-                      transaction_type: 'credit'
+                      transaction_type: 'credit',
+                      date : new Date()
                     }
                   }
                 }
@@ -372,6 +412,28 @@ const updateLearningProgress=async(req,res)=>{
         return res.status(500)
     }
 }
+
+const categoryLoad=async(req,res)=>{
+    try {
+        console.log('category fetching..........');
+        const response = await categoryModel.find({}).exec()
+        res.status(200).json({result : response})
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
+
+const contactUs=async(req,res)=>{
+    try {
+        const {email,subject,comment} = req.body.data
+        await contactModel.create({ email, subject, comment ,date : new Date()})
+        res.status(200).json({message : 'Added successfully'})
+    } catch (error) {
+        console.log(error);
+        res.status(500)
+    }
+}
   
 
 
@@ -389,5 +451,7 @@ module.exports = {
     moduleCompleted,
     loadPurchasedCourses,
     cancelPurchase,
-    updateLearningProgress
+    updateLearningProgress,
+    categoryLoad,
+    contactUs
 }

@@ -3,6 +3,7 @@ const orderModel = require('../../model/orderSchema')
 const Razorpay = require('razorpay')
 require('dotenv').config()
 const crypto = require('crypto')
+const courseModel = require('../../model/courseSchema')
 const stripe = Stripe(process.env.STRIPE_KEY)
 
 const paymentModeHandle = async (req, res) => {
@@ -91,8 +92,14 @@ const paymentStatusHandle = async(req,res)=>{
           amount : amount,
           payment_mode:'strip'
         })
-    const save = await order.save()
-       save && res.redirect(`${process.env.FONTENDURL}/payments/success`)
+        const increment=async()=>await courseModel.updateOne(
+          { _id: course_id },
+          { $inc: { total_purchases: 1 } } 
+        );
+        const save = await order.save().then(()=>{
+          increment()
+          save && res.redirect(`${process.env.FONTENDURL}/payments/success`)
+    })
     }else{
         res.redirect(`${process.env.FONTENDURL}/payments?status=failed`)
     }
@@ -127,8 +134,15 @@ const verifyrzpay = async (req,res) => {
         date_of_purchase : purchase_date,
         amount : amount
       })
+
+      const increment=async()=>await courseModel.updateOne(
+        { _id: course_id },
+        { $inc: { total_purchases: 1 } } 
+      );
+
       await order.save()
       .then(() => {
+        increment()
         res.status(200).json({ message: 'Payment success' });
       })
       .catch((error) => {
