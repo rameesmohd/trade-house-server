@@ -3,123 +3,75 @@ const chatModel = require("../../model/chatSchema");
 const userModel = require("../../model/userSchema");
 const messageModel = require("../../model/messageSchema");
 
-const accessChat = async(req,res)=>{
+const accessChat = async (req, res) => {
     try {
-        const { other_role_id, user_role } = req.body;
+        const { other_id, user_role } = req.body;
         const other_role = user_role === 'user' ? 'tutor' : 'user';
         
-        if (!id || !role) return res.status(400);
+        if (!other_id || !user_role) {
+            return res.status(400).send('Bad Request');
+        }
         
-        const user_role_id = new mongoose.Types.ObjectId(req.user._id);
-
+        const userId = new mongoose.Types.ObjectId(req.user._id);
+        const otherId = new mongoose.Types.ObjectId(other_id);
+        
         const findQuery = {
-            [user_role]: user_role_id,
-            [other_role]: other_role_id
+            [user_role]: userId,
+            [other_role]: otherId
         };
 
-        let isChat = await chatModel.findOne(findQuery)
-            .populate({path : 'user',select : '-password'})
-            .populate({path : 'tutor' ,select : '-password'})
-            .populate({path : 'latestMessage'})
-        
-        isChat = await  userModel.populate(isChat,{
-            path : "latestMessage.sender",
-            select : 'name pic email'
-        })
-
-        if(isChat){
-            res.status(200).json({result:isChat})
-        }else{
+        const isChat = await chatModel.findOne(findQuery);
+        if (isChat) {
+            res.sendStatus(200);
+        } else {
             const chatData = {
-                [user_role]: user_role_id,
-                [other_role]: other_role_id
-            }
-            const createdChat = (await chatModel.create(chatData))
-            .populate("user","name image")
-            .populate("tutor","name image")
-            .exec();
+                [user_role]: userId,
+                [other_role]: otherId
+            };
+            await chatModel.create(chatData);
+            res.sendStatus(200);
         }
-        res.status(200).json({createdChat})
     } catch (error) {
-        return res.status(500)
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
-}
+};
+
 
 const fetchChats=async(req,res)=>{
     try {
         const {user_role}= req.query
-        const user_id = new mongoose.Types.ObjectId(req.user._id);        
-        // const result = await chatModel.find({[user_role] : user_id})
-        //     .populate({path : 'user',select : '-password'})
-        //     .populate({path : 'tutor' ,select : '-password'})
-        //     .populate({path : 'latestMessage'})
-        //     .sort({updatedAt:-1})
-        //     .then((async(result) =>{
-        //         result = await User.populate(result,{
-        //             path: "latestMessag.sender",
-        //             select : "name pic email"
-        //         })
-        //     }))
-
+        const user_id = new mongoose.Types.ObjectId(req.user._id);       
+         
         const chats = await chatModel
         .find({ [user_role]: user_id })
-        .populate({ path: 'user', select: '-password' })
-        .populate({ path: 'tutor', select: '-password' })
-        .populate({ path: 'latestMessage', populate: { path: 'sender', select: 'name pic email' } })
+        .populate({ path: 'user', select: 'name image email' })
+        .populate({ path: 'tutor', select: 'name image email' })
+        .populate({ path: 'latestMessage', populate: { path: 'sender', select: 'name image email' } })
         .sort({ updatedAt: -1 });
 
-        res.status(200).json({chats})
+        res.status(200).json({result:chats})
     } catch (error) {
         console.log(error);
         return res.status(500)
     }
 }
 
-const sendMessage=async(req,res)=>{
+const sendMessage = async (messageData, chatId) => {
     try {
-    const { content ,chatId } = req.body
-    const user_id = new mongoose.Types.ObjectId(req.user._id);
-
-    if(!content || ! chatId){
-        return res.status(400)
-    }
-
-    const newMessage = {
-        sender : user_id,
-        content :content,
-        chat : new mongoose.Types.ObjectId(chatId)
-    }
-
-
-    
-    let message = await messageModel.create(newMessage);
-    
-    console.log(message);
-    message = await messageModel
-    .findById(message._id)
-    .populate("sender", "name image")
-    .populate("chat")
-    .populate({
-        path: "chat.user",
-        select: "name image email",
-    })
-    .populate({
-        path: "chat.tutor",
-        select: "name image email",
-    })
-    .exec();
-
-    // Now 'message' is a Mongoose document with populated fields.
-
-
-    await chatModel.findByIdAndUpdate(req.body.chatId,{
-        latestMessage:message
-    })
-    console.log(message);
-    res.json(message)
+        const newMessage = {
+            sender: new mongoose.Types.ObjectId(messageData.sender._id),
+            content: messageData.content, 
+            chat: new mongoose.Types.ObjectId(chatId)
+        }
+        let message = await messageModel.create(newMessage);
+        await chatModel.findByIdAndUpdate(chatId, {
+            latestMessage: message
+        })
+        return true;
     } catch (error) {
-        console.log(error);
-        return res.status(500)
+        console.error(error);
+        return false;
     }
 }
 
@@ -128,7 +80,7 @@ const allMessages = async(req,res)=>{
       const messages = await messageModel.find({chat : req.query.chatId})
         .populate("sender","name image email")
         .populate("chat")
-      res.status(200).json(messages)
+         res.status(200).json({result:messages})
     } catch (error) {
         console.log(error);
         return res.status(500)

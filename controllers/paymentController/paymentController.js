@@ -140,9 +140,12 @@ const verifyrzpay = async (req,res) => {
         { $inc: { total_purchases: 1 } } 
       );
 
+      
+
       await order.save()
       .then(() => {
         increment()
+
         res.status(200).json({ message: 'Payment success' });
       })
       .catch((error) => {

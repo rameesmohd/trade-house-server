@@ -25,7 +25,7 @@ const register = async(req,res)=>{
                 mobile: mobile,
                 password: hashpassword
             })
-            return res.status(201).json({ msg:'Registered successfully' })
+            return res.status(200).json({ msg:'Registered successfully' })
         }else{
            return res.status(400).json({errMsg: 'Email already exists'})
         }
