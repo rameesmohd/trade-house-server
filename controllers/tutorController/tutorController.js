@@ -223,11 +223,20 @@ const loadModules=async(req,res)=>{
 
 const saveModule=async(req,res)=>{
     try {
-        const module = new moduleModel({
-            title : req.body.title,
-            courseId : req.body.courseId,
-        }).save()
-        module && res.status(200).json({message : 'Saved successfully'})
+        const newModule = new moduleModel({
+            title: req.body.title,
+            courseId: req.body.courseId,
+          });
+          
+          newModule.save()
+            .then((savedModule) => {
+                console.log(savedModule);
+              res.status(200).json({ message: 'Saved successfully', savedModule: savedModule });
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+              res.status(500).json({ error: 'Internal Server Error' });
+            });          
     } catch (error) {
         res.status(500)
         console.log(error.message);
@@ -259,13 +268,11 @@ const updateModule=async(req,res)=>{
 
 const addChapter=async(req,res)=>{
     try {
-        console.log(req.body);
         const moduleId = req.body.moduleId
         const courseId = req.body.courseId
         const title = req.body.title
         const data =  await moduleModel.updateOne({_id:moduleId},{$push:{chapters :{chapter_title : title}}})
         const modules = await moduleModel.find({courseId : courseId})
-        console.log(modules);
         if(data){
             return res.status(200).json({result:modules,message: 'Chapter added successfully'}) 
         }
@@ -352,18 +359,82 @@ const myStudentsLoad=async(req,res)=>{
     }
 }
 
+const calculateTotalAmount = async (startDate, endDate) => {
+    const aggregationPipeline = [
+      {
+        $match: {
+          status: 'success',
+          is_refundable: false,
+          date_of_purchase: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: {
+            $sum: '$amount'
+          }
+        }
+      }
+    ];
+    const totalAmount = await orderModel.aggregate(aggregationPipeline);
+    if (totalAmount.length > 0) {
+      return totalAmount[0].totalAmount;
+    } else {
+      return 0; // Return 0 if there are no orders
+    }
+}
+
 const overViewLoad = async (req, res) => {
     try {
-      console.log(req.query);
-      const filter = req.query.filter
-      let fromDate = req.query.from
-      let toDate = req.query.to 
-      const expand =req.query.expand === "true"
-      const tutor_id = new mongoose.Types.ObjectId(req.user._id);
-      const transaction = await userModel
-        .findOne({ _id: tutor_id }, { b_wallet_balance: 1, b_wallet_transaction: 1 })
-        .exec();
-      const myCourses = await courseModel.find({ tutor: tutor_id }, { id: 1 })
+    const filter = req.query.filter
+    let fromDate = req.query.from
+    let toDate = req.query.to 
+    const expand =req.query.expand === "true"
+
+    const tutor_id = new mongoose.Types.ObjectId(req.user._id);
+
+    const transaction = await userModel
+    .findOne({ _id: tutor_id }, { b_wallet_balance: 1, b_wallet_transaction: 1 })
+    .exec();
+    const myCourses = await courseModel.find({ tutor: tutor_id }, { id: 1 })
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const lastWeek = new Date();
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    
+      
+    const firstDayOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const weeklyTotalRevenue = await calculateTotalAmount(lastWeek, today)*0.75
+    const monthlyTotalRevenue = await calculateTotalAmount(firstDayOfThisMonth, today)*0.75
+    const totalRevenue = await calculateTotalAmount(new Date(0), today)*0.75
+
+    const thisYear = new Date().getFullYear();
+    const monthlySalesAmountsArray = [];
+    
+    for (let month = 0; month < 12; month++) {
+      const startDate = new Date(thisYear, month, 1);
+      const endDate = new Date(thisYear, month + 1, 0);
+    
+      const monthlySales = await calculateTotalAmount(startDate, endDate) * 0.75;
+    
+      monthlySalesAmountsArray.push(monthlySales);
+    }
+    
+    console.log(monthlySalesAmountsArray); 
+    
+        
+      
       let recentSales;
     if(fromDate && toDate){
         recentSales = await orderModel
@@ -470,13 +541,32 @@ const overViewLoad = async (req, res) => {
                 select : 'title'
             })
             .exec();
+
+       
         }}     
-    return res.status(200).json({ transaction: transaction, recentSales: recentSales });
+    return res.status(200)
+    .json({ transaction: transaction,
+            recentSales: recentSales,
+            weeklyTotalRevenue: weeklyTotalRevenue,
+            monthlyTotalRevenue: monthlyTotalRevenue,
+            totalRevenue:totalRevenue,
+            monthlySalesAmountsArray:monthlySalesAmountsArray });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   };
+
+  const disableCourse=async(req,res)=>{
+    try {
+        const { courseId } =  req.query
+        await courseModel.updateOne({_id:courseId},{$set : {is_active : false}})
+        res.status(200).json({message:'course deleted sucessfully'})
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: 'Internal Server Error' })
+    }
+  }
 
 
 
@@ -485,6 +575,7 @@ module.exports= {
     addCourse,
     myCourses,
     editCourse,
+    disableCourse,
     tutorProfile,
     updateImage,
     updateAbout,

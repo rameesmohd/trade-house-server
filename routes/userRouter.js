@@ -32,8 +32,12 @@ router.patch('/update-progress',userController.updateLearningProgress)
 router.route('/chat')
     .get(chatController.fetchChats)
     .post(chatController.accessChat)
+    
 router.route('/message')
     .get(chatController.allMessages)
     .post(chatController.sendMessage)
+
+router.route('/review')
+    .post(userController.addReview)
     
 module.exports = router;

@@ -17,8 +17,9 @@ router.route('/category')
     .post(adminController.addCategory)
     .patch(adminController.updateCategory);
     
-router.get('/sales',adminController.salesLoad)
 router.patch('/:action/:id', adminController.handleUserBlock);
+
+router.get('/sales',adminController.salesLoad)
 router.get('/tutor-requests',adminController.tutorReq)
 router.patch('/approve-request',adminController.approveTutor)
 router.patch('/reject-request',adminController.rejectTutorReq)
@@ -28,8 +29,9 @@ router.patch('/toggle-block',adminController.toggleBlockTutor)
 router.patch('/toggle-activecourse',adminController.toggleActiveCourse)
 router.get('/dashboard',adminController.dashboardLoad)
 router.get('/courses',adminController.allCourses)
+
 router.route('/contact-inbox')
-    .get(adminController.loadContactMssg)
-    .patch(adminController.ContactMssgRead)
+     .get(adminController.loadContactMssg)
+     .patch(adminController.ContactMssgRead)
 
 module.exports = router

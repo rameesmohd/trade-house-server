@@ -13,6 +13,7 @@ router.route('/courses')
     .post(upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.addCourse)
     .patch(upload.fields([{ name: 'banner' }, { name: 'preview' }]),tutorController.editCourse)
     .get(tutorController.myCourses)
+    .put(tutorController.disableCourse)
 
 router.route('/modules')
     .get(tutorController.loadModules)
@@ -35,10 +36,9 @@ router.get('/overview',tutorController.overViewLoad)
 router.route('/chat')
     .get(chatController.fetchChats)
     .post(chatController.accessChat)
+    
 router.route('/message')
     .get(chatController.allMessages)
     .post(chatController.sendMessage)
 
-
-    
 module.exports = router

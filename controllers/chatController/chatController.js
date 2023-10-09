@@ -1,6 +1,5 @@
 const { default: mongoose } = require("mongoose");
 const chatModel = require("../../model/chatSchema");
-const userModel = require("../../model/userSchema");
 const messageModel = require("../../model/messageSchema");
 
 const accessChat = async (req, res) => {
@@ -64,10 +63,13 @@ const sendMessage = async (messageData, chatId) => {
             content: messageData.content, 
             chat: new mongoose.Types.ObjectId(chatId)
         }
+        
         let message = await messageModel.create(newMessage);
         await chatModel.findByIdAndUpdate(chatId, {
-            latestMessage: message
-        })
+            latestMessage: message,
+            $inc: { unreadMessages: 1 }
+          });
+          
         return true;
     } catch (error) {
         console.error(error);
@@ -77,6 +79,8 @@ const sendMessage = async (messageData, chatId) => {
 
 const allMessages = async(req,res)=>{
     try {
+      await chatModel.updateOne({_id: req.query.chatId},{$set : {unreadMessages : 0}})  
+      
       const messages = await messageModel.find({chat : req.query.chatId})
         .populate("sender","name image email")
         .populate("chat")

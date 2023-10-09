@@ -450,7 +450,7 @@ const dashboardLoad=async(req,res)=>{
               if (totalAmount.length > 0) {
                 return totalAmount[0].totalAmount;
               } else {
-                return 0; // Return 0 if there are no orders
+                return 0; 
               }
           }
           const firstDayOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -458,6 +458,18 @@ const dashboardLoad=async(req,res)=>{
           const weeklyTotalRevenue = await calculateTotalAmount(lastWeek, today)*0.25
           const monthlyTotalRevenue = await calculateTotalAmount(firstDayOfThisMonth, today)*0.25
           const totalRevenue = await calculateTotalAmount(new Date(0), today)*0.25
+
+          const monthlySalesAmountsArray = [];          
+          const thisYearFull = new Date().getFullYear();
+          for (let month = 0; month < 12; month++) {
+            const startDate = new Date(thisYearFull, month, 1);
+            const endDate = new Date(thisYearFull, month + 1, 0);
+          
+            const monthlySales = await calculateTotalAmount(startDate, endDate)
+          
+            monthlySalesAmountsArray.push(monthlySales);
+          }
+          console.log(monthlySalesAmountsArray);
           
         return res.status(200).json({ 
             result: recentSales, 
@@ -472,7 +484,8 @@ const dashboardLoad=async(req,res)=>{
             tutorCount,
             weeklyTotalRevenue,
             monthlyTotalRevenue,
-            totalRevenue
+            totalRevenue,
+            monthlySalesAmountsArray
         });
       } catch (error) {
         console.error('Error:', error);

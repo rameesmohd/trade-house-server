@@ -181,7 +181,7 @@ const submitRequest= async(req,res)=>{
 const allCourses=async(req,res)=>{
     try {
         console.log(req.query)
-        const { category, level, price ,search} = req.query;
+        const { category, level, price ,search , skip ,limit} = req.query;
         const [variable1, variable2] = price.split(',').map(Number);
         
         const searchQuery = {
@@ -197,28 +197,13 @@ const allCourses=async(req,res)=>{
           ...(category !== 'All' && { category }),
           ...(level !== 'All' && { level }),
           ...(price !== 'All' && { price: { $gte: variable1, $lt: variable2 }}),
-          ...(search !== 'All' && (isNaN(Number(search)) ? searchQuery : { price: Number(search) }))
+          ...(search !== 'All' && (isNaN(Number(search)) ? searchQuery : { price: Number(search) })),
         };
           
         let courses = await courseModel
-          .find(findQuery)
+          .find(findQuery).skip(skip).limit(limit)
           .populate('tutor','firstName lastName image experience type_of_trader about_me')
           .populate('category');
-        
-        // if(!courses.length&&search!=='All'){
-        //     const tutorsearchQuery = {
-        //         $or: [
-        //           { firstName: { $regex: new RegExp(search, 'i') } },
-        //           { lastName: { $regex: new RegExp(search, 'i') } }
-        //         ]
-        //     };
-        //     const tutorMatches = await usermodel.find(tutorsearchQuery, '_id');
-        //     const tutorIds = tutorMatches.map((tutor) => tutor._id);
-        //     courses = await courseModel
-        //     .find( { tutor: { $in: tutorIds } })
-        //     .populate('tutor','firstName lastName image experience type_of_trader about_me')
-        //     .populate('category');
-        // }
 
         return courses
           ? res.status(200).json({ result: courses })
@@ -365,6 +350,7 @@ const loadPurchasedCourses=async(req,res)=>{
             }
             ])
         purchased.length ? purchasedCourses = purchased.map((obj)=>obj.course_id) : null 
+        
         return res.status(200).json({result : purchasedCourses})
      } catch (error) {
         console.log(error);
@@ -435,6 +421,34 @@ const contactUs=async(req,res)=>{
     }
 }
   
+const addReview=async(req,res)=>{
+    try {
+        const {rating,feedback ,id} = req.body
+        const userId = new mongoose.Types.ObjectId(req.user._id)
+        const user =  await usermodel.findOne({_id:userId})
+        const review ={
+            user_id : userId,
+            user_name: user.name,
+            rating  : rating,
+            review : feedback,
+            date : new Date()
+        }
+        const updatedData = await courseModel
+        .findOneAndUpdate(
+          { _id: id },
+          { $push: { user_ratings: review } },
+          { new: true } 
+        )
+        .populate('tutor', 'firstName lastName image experience type_of_trader about_me')
+        .populate('category')
+        .exec();
+
+        return res.status(200).json({courseData : updatedData})
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
 
 
 module.exports = {
@@ -453,5 +467,6 @@ module.exports = {
     cancelPurchase,
     updateLearningProgress,
     categoryLoad,
-    contactUs
+    contactUs,
+    addReview
 }

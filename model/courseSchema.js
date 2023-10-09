@@ -43,14 +43,19 @@ const courseSchema = new mongoose.Schema({
                 type : mongoose.Schema.Types.ObjectId,
                 ref : 'users'
             },
+            user_name :{
+                type : String
+            },
             rating : {
                 type : Number                
             },
             review : {
-                type : {
-                    type: String
-                }
+                type: String
+            },
+            date:{
+                type: Date
             }
+
         }
     ],
     total_rating : {

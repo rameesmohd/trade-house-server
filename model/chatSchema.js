@@ -12,6 +12,10 @@ const chatSchema = new mongoose.Schema({
     latestMessage : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'message'
+    },
+    unreadMessages:{
+        type : Number,
+        default : 0
     }
 },
 {
