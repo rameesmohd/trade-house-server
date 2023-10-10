@@ -15,6 +15,8 @@ let errMsg,msg;
 
 const register = async(req,res)=>{
     try {
+
+        console.log('object')
         let {name,email,mobile,password} = req.body
         const user = await usermodel.findOne({email: email});
         if(!user){
