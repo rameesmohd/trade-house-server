@@ -1,10 +1,12 @@
 const { sendMessage } = require('../controllers/chatController/chatController')
+const env = require('dotenv').config()
+const fontendURl = process.env.FONTENDURL
 
 const socket = (server) => {
     const io = require('socket.io')(server, {
         pingTimeout: 60000,
         cors: {
-            origin: process.env.FONTENDURL
+            origin: fontendURl
         }
     })
     

@@ -203,8 +203,8 @@ const allCourses=async(req,res)=>{
         };
           
         let courses = await courseModel
-          .find(findQuery).skip(skip).limit(limit)
-          .populate('tutor','firstName lastName image experience type_of_trader about_me')
+          .find(findQuery,{banner:1,title:1,tutor:1,price:1, total_rating:1}).skip(skip).limit(limit)
+          .populate({path : 'tutor', select : 'firstName lastName'})
           .populate('category');
 
         return courses
@@ -248,13 +248,16 @@ const loadUserPanel=async(req,res)=>{
 
 const updateImage=async(req,res)=>{
     try {
-        if(req.body.imageUrlData && req.body.id){
-            const Updated = await usermodel.findByIdAndUpdate({_id :req.body.id},{$set :{image : req.body.imageUrlData}})
+        const image = req.files.image[0]
+        if(image){
+            const upload = await cloudinary.uploader.upload(image.path)
+            let imageURL = upload.secure_url;
+            fs.unlinkSync(image.path)
+            const Updated = await usermodel.findByIdAndUpdate({_id :req.body.id},{$set :{image : imageURL}})
             if(Updated){
-             res.status(200).json({message : 'updated successfully'})
+            res.status(200).json({tutor:Updated})
             }
-         }
-        console.log(req.body);
+        }
     } catch (error) {
         res.status(500)
         console.log(error);
@@ -333,12 +336,15 @@ const moduleCompleted=async(req,res)=>{
     }
 }
 
-const loadPurchasedCourses=async(req,res)=>{
+const loadCourse=async(req,res)=>{
      try {
+        console.log('requested course course with query');
+
         let purchasedCourses = []
         const user = new mongoose.Types.ObjectId(req.user._id);
-        const purchased = await orderModel.aggregate([
-            {
+        if(user){
+            const purchased = await orderModel.aggregate([
+                {
                 $match:{
                     user_id : user._id,
                     status : 'success'
@@ -350,10 +356,18 @@ const loadPurchasedCourses=async(req,res)=>{
                     _id:0
                 }
             }
-            ])
-        purchased.length ? purchasedCourses = purchased.map((obj)=>obj.course_id) : null 
-        
-        return res.status(200).json({result : purchasedCourses})
+        ])
+            purchased.length ? purchasedCourses = purchased.map((obj)=>obj.course_id) : null 
+        }
+
+        let coursesDetails = await courseModel
+        .findOne({_id : req.query.courseId},{banner : 0,category:0 ,price : 0,title : 0})
+        .populate('tutor','firstName lastName image experience type_of_trader about_me')
+
+        console.log('returned')
+        return coursesDetails ?
+        res.status(200).json({ courseExpand: coursesDetails ,result : purchasedCourses}) :
+        res.status(500).json({ error: 'Courses not found' });
      } catch (error) {
         console.log(error);
         res.status(500)
@@ -465,7 +479,7 @@ module.exports = {
     updateImage,
     loadModules,
     moduleCompleted,
-    loadPurchasedCourses,
+    loadCourse,
     cancelPurchase,
     updateLearningProgress,
     categoryLoad,

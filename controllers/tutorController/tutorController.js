@@ -159,7 +159,6 @@ const editCourse=async(req,res)=>{
 
 const tutorProfile=async(req,res)=>{
     try {
-        console.log(req.query);
         const id= req.query.id
         const data = await userModel.findOne({_id:id,is_tutor : true})
         if(data){
@@ -175,11 +174,15 @@ const tutorProfile=async(req,res)=>{
 
 const updateImage=async(req,res)=>{
     try {
-        if(req.body.imgDataUrl && req.body.id){
-           const Updated = await userModel.findByIdAndUpdate({_id :req.body.id},{$set :{image : req.body.imgDataUrl}})
-           if(Updated){
+        const image = req.files.image[0]
+        if(image){
+            const upload = await cloudinary.uploader.upload(image.path)
+            let imageURL = upload.secure_url;
+            fs.unlinkSync(image.path)
+            const Updated = await userModel.findByIdAndUpdate({_id :req.body.id},{$set :{image : imageURL}})
+            if(Updated){
             res.status(200).json({tutor:Updated})
-           }
+            }
         }
     } catch (error) {
         res.status(500)
@@ -342,10 +345,16 @@ const deleteChapter=async(req,res)=>{
 const myStudentsLoad=async(req,res)=>{
     try {
         const tutor_id = new mongoose.Types.ObjectId(req.user._id);
-        const myCourses = await courseModel.find({tutor:tutor_id})
+
+        const myCourses = await courseModel.find({tutor:tutor_id},{_id:1})
+        console.log(myCourses)
+
         const myCourse_ids = myCourses.map((course)=>course._id)
-        const myCoursePurchases = await orderModel.find({status : {$ne : 'refunded'},course_id : {$in : myCourse_ids}},
-            {date_of_purchase :1,learning_progress:1,status:1}).populate({
+
+        const myCoursePurchases = await orderModel.find(
+        {status:{$ne : 'refunded'}, course_id:{$in : myCourse_ids}},
+        { date_of_purchase :1,learning_progress:1,status:1 
+        }).populate({
             path: 'user_id',
             select : 'name email mobile image'
         }).populate({

@@ -96,10 +96,10 @@ const paymentStatusHandle = async(req,res)=>{
           { _id: course_id },
           { $inc: { total_purchases: 1 } } 
         );
-        const save = await order.save().then(()=>{
+        await order.save().then(()=>{
           increment()
-          save && res.redirect(`${process.env.FONTENDURL}/payments/success`)
-    })
+          })
+        res.redirect(`${process.env.FONTENDURL}/payments/success`)
     }else{
         res.redirect(`${process.env.FONTENDURL}/payments?status=failed`)
     }
@@ -139,8 +139,6 @@ const verifyrzpay = async (req,res) => {
         { _id: course_id },
         { $inc: { total_purchases: 1 } } 
       );
-
-      
 
       await order.save()
       .then(() => {

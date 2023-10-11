@@ -55,7 +55,6 @@ const courseSchema = new mongoose.Schema({
             date:{
                 type: Date
             }
-
         }
     ],
     total_rating : {

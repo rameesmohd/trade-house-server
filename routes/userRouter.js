@@ -22,10 +22,10 @@ router.get('/tutor-load',userController.tutorload);
 router.post('/payments/:methord',paymentController.paymentModeHandle)
 router.post('/verifyRazorpay',paymentController.verifyrzpay)
 router.get('/userpanel',userController.loadUserPanel)
-router.patch('/image',userController.updateImage)
+router.patch('/image',upload.fields([{name:'image'}]),userController.updateImage)
 router.get('/loadmodule/:module_id',userController.loadModules)
 router.patch('/module-completed',userController.moduleCompleted)
-router.get('/purchased-courses',userController.loadPurchasedCourses)
+router.get('/load-course',userController.loadCourse)
 router.patch('/cancel-purchase',userController.cancelPurchase)
 router.patch('/update-progress',userController.updateLearningProgress)
 

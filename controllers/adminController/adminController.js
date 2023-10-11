@@ -38,7 +38,7 @@ const userDetails = async(req,res)=>{
               { is_admin: false },
               { is_admin: { $exists: false } }
             ]
-          });
+          },{name:1,email:1,mobile:1})
         res.status(200).json({result : users})
     } catch (error) {
         res.json(500).json({result : error.message})

@@ -80,10 +80,9 @@ const sendMessage = async (messageData, chatId) => {
 const allMessages = async(req,res)=>{
     try {
       await chatModel.updateOne({_id: req.query.chatId},{$set : {unreadMessages : 0}})  
-      
       const messages = await messageModel.find({chat : req.query.chatId})
-        .populate("sender","name image email")
-        .populate("chat")
+        .populate("sender","name")
+        // .populate("chat")
          res.status(200).json({result:messages})
     } catch (error) {
         console.log(error);
