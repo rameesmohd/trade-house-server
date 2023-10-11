@@ -15,6 +15,7 @@ router.get('/payments',paymentController.paymentStatusHandle)
 router.get('/categories',userController.categoryLoad)
 router.get('/courses',userController.allCourses)
 router.post('/contact',userController.contactUs)
+router.get('/load-course',userController.loadCourse)
 
 router.use(verifyToken)
 router.post('/tutor-request',upload.single('file'),userController.submitRequest);
@@ -25,7 +26,6 @@ router.get('/userpanel',userController.loadUserPanel)
 router.patch('/image',upload.fields([{name:'image'}]),userController.updateImage)
 router.get('/loadmodule/:module_id',userController.loadModules)
 router.patch('/module-completed',userController.moduleCompleted)
-router.get('/load-course',userController.loadCourse)
 router.patch('/cancel-purchase',userController.cancelPurchase)
 router.patch('/update-progress',userController.updateLearningProgress)
 
