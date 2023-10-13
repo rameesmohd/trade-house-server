@@ -11,23 +11,18 @@ const cron = require('./services/cron')
 
 connectDb()
 
-const corsOptions = {
-	origin: [
-	  "http://localhost:5173",
-	  "https://www.tradeh.online",
-	  "https://tradeh.online", 
-	],
-	methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
-	allowedHeaders: ["Content-Type", "Authorization"],
-    credentials:true, 
-	optionsSuccessStatus: 200,
-  };
+app.use(cors({
+    origin: ["http://localhost:5173", "https://www.tradeh.online"],
+    methods: "GET,PUT,POST,DELETE,PATCH",
+    allowedHeaders: "Content-Type,Authorization",
+    credentials: true,
+    optionsSuccessStatus: 204 // Indicate that preflight requests should return a status code of 204
+  }));
   
-app.use(cors(corsOptions))
-
-app.options('*', (req, res) => {
+  // Define a middleware specifically for handling preflight requests
+  app.options('*', (req, res) => {
     res.status(204).send();
-  });
+  })
 
 
 app.use(express.json({ limit: '3mb' }))
