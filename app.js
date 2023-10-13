@@ -25,13 +25,9 @@ const corsOptions = {
   
 app.use(cors(corsOptions))
 
-app.use(cors({
-    origin: ["http://localhost:5173", "https://www.tradeh.online"],
-    methods: "GET,PUT,POST,DELETE,PATCH",
-    allowedHeaders: "Content-Type,Authorization",
-    credentials: true,
-    optionsSuccessStatus: 204 // Indicate that preflight requests should return a status code of 204
-  }));
+app.options('*', (req, res) => {
+    res.status(204).send();
+  });
 
 
 app.use(express.json({ limit: '3mb' }))
