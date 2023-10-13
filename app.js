@@ -12,7 +12,7 @@ connectDb()
 console.log('api called.......');
 
 // app.use(cors())  
-app.use(cors({credentials: true, origin: ['https://tradeh.online','http://tradeh.online']}));
+app.use(cors({credentials: true, origin: ['https://www.tradeh.online','http://www.tradeh.online']}));
 
 app.use(express.json({ limit: '3mb' }))
 app.use(express.urlencoded({ limit: '3mb', extended: true }))
