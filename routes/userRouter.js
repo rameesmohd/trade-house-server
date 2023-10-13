@@ -15,8 +15,8 @@ router.get('/payments',paymentController.paymentStatusHandle)
 router.get('/categories',userController.categoryLoad)
 router.get('/courses',userController.allCourses)
 router.post('/contact',userController.contactUs)
-router.get('/load-course',userController.loadCourse)
 router.get('/ecnomic-calender',userController.leadForexcalender)
+router.get('/load-course',userController.loadCourse)
 
 router.use(verifyToken)
 router.post('/tutor-request',upload.single('file'),userController.submitRequest);

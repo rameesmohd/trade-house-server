@@ -339,11 +339,9 @@ const moduleCompleted=async(req,res)=>{
 
 const loadCourse=async(req,res)=>{
      try {
-        console.log('requested course course with query');
-        const user =  req?.user?._id
         let purchasedCourses = []
-        if(user){
-            const user = new mongoose.Types.ObjectId(req.user._id);
+        if(req.query.user_id){
+            const user = new mongoose.Types.ObjectId(req.query.user_id);
             const purchased = await orderModel.aggregate([
                 {
                 $match:{
