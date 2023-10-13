@@ -26,7 +26,7 @@ const crone = ()=>{
           };
           
           try {
-            const response = await axios.request(options);
+            const response = await fetch.request(options);
     
             const economicCalenderData = response.data;
 
