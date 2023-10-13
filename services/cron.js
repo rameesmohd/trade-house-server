@@ -40,7 +40,6 @@ const crone = () => {
           const economicCalendarData = await response.json();
           console.log(economicCalendarData);
 
-          // Assuming you have a 'marketModel' model for MongoDB
           await marketModel.updateOne({}, { $set: { forexcalender: economicCalendarData } });
           console.log('Economic calendar data saved to the database.');
         } else {
