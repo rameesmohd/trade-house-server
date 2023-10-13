@@ -24,6 +24,6 @@ app.use('/admin',adminRouter)
 app.use('/tutor',tutorRouter)
 app.use('/',userRouter)
 
-
+cron()
 const server = app.listen(process.env.PORT,()=>console.log("Server started at port",process.env.PORT))
 socket(server)
