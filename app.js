@@ -7,6 +7,7 @@ const userRouter = require('./routes/userRouter')
 const adminRouter = require('./routes/adminRouter')
 const tutorRouter = require('./routes/tutorRouter')
 const socket = require('./services/socket')
+const cron = require('./services/cron')
 
 connectDb()
 app.use(cors())
@@ -18,6 +19,6 @@ app.use('/admin',adminRouter)
 app.use('/tutor',tutorRouter)
 app.use('/',userRouter)
 
+cron()
 const server = app.listen(process.env.PORT,()=>console.log("Server started at port",process.env.PORT))
-
 socket(server)
