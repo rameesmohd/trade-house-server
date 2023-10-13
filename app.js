@@ -10,10 +10,24 @@ const socket = require('./services/socket')
 const cron = require('./services/cron')
 
 connectDb()
-app.use(cors({ origin: '*' }))
+
 app.use(express.json({ limit: '3mb' }))
 app.use(express.urlencoded({ limit: '3mb', extended: true }))
 console.log('api called.......');
+
+const corsOptions = {
+	origin: [
+	  "http://localhost:5173",
+	  "https://www.tradeh.online",
+	  "https://tradeh.online", // Add your Vercel app origin here
+	],
+	methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
+	allowedHeaders: ["Content-Type", "Authorization"],
+	optionsSuccessStatus: 204,
+  };
+  
+  // Use the cors middleware with the specified options
+  app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,6 +41,6 @@ app.use('/admin',adminRouter)
 app.use('/tutor',tutorRouter)
 app.use('/',userRouter)
 
-// cron()
+cron()
 const server = app.listen(process.env.PORT,()=>console.log("Server started at port",process.env.PORT))
 socket(server)
