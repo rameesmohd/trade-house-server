@@ -38,8 +38,6 @@ const fetchCalendarData = async () => {
     }
   };
 
-  
-
   module.exports = {
     fetchCalendarData
   }

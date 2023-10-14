@@ -7,7 +7,7 @@ const userRouter = require('./routes/userRouter')
 const adminRouter = require('./routes/adminRouter')
 const tutorRouter = require('./routes/tutorRouter')
 const socket = require('./services/socket')
-const scheduleCronJobs = require('./services/cronSchedules');
+
 connectDb()
 
 const corsOptions = {
@@ -24,7 +24,20 @@ app.use('/admin',adminRouter)
 app.use('/tutor',tutorRouter)
 app.use('/',userRouter)
 
-scheduleCronJobs();
+const { spawn } = require('child_process');
+const cronSchedule = spawn('node', ['cronSchedules.js']);
+
+cronSchedule.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+});
+
+cronSchedule.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+});
+
+cronSchedule.on('close', (code) => {
+    console.log(`Child process exited with code ${code}`);
+})
 
 const server = app.listen(process.env.PORT,()=>console.log("Server started at port",process.env.PORT))
 socket(server)
