@@ -9,7 +9,7 @@ function scheduleCronJobs() {
 
   cron.schedule('*/10 * * * * *', () => {
     console.log('This cron function runs every 5 seconds.');
-    fetchCalendarData();
+    // fetchCalendarData();
   });
 }
 
