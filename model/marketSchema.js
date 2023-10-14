@@ -1,9 +1,12 @@
 const mongoose = require('mongoose')
 
 const marketSchema = mongoose.Schema({
-     forexcalender :{
+   forexcalender :{
         type : Array
-     }  
+   },
+   CurrencyData :{
+      type : Array
+   }  
 })
 
 const marketModel = mongoose.model('market',marketSchema)

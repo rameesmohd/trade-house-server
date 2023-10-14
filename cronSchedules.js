@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const { fetchCalendarData } = require('./controllers/marketController/marketController')
+const { fetchCalendarData ,fetchLiveCurrencyData} = require('./controllers/marketController/marketController')
 const mongoose = require('mongoose')
 require('dotenv').config()
 |
@@ -10,13 +10,17 @@ mongoose.connect(process.env.URL, {
 
 const fetchCalendarDatas = async () => {
     try {
-        console.log('===cron working===');
-        // fetchCalendarData()
+        console.log('===cron working===fetchCalendarData');
+        fetchCalendarData()
     } catch (error) {
         console.error('Error deleting expired subscriptions:', error);
     }
 };
 
-cron.schedule('*/10 * * * * *', () => {
-    fetchCalendarDatas()
+cron.schedule('0 0 */3 * * *', () => {
+    fetchCalendarDatas();
+});
+
+cron.schedule('0 0 */6 * * *', () => {
+    fetchLiveCurrencyData();
 });
