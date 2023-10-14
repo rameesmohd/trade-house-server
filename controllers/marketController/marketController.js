@@ -64,14 +64,23 @@ const fetchCalendarData = async () => {
 
         await marketModel.updateOne({}, { $set: { CurrencyData: modifiedData } });
         console.log(modifiedData,'CurrencyData modifiedData saved to schema');
-        // setModifiedData(modifiedData)
-        // setApiLoading(prevState => ({ ...prevState, majorCurr: false }));
       }catch(error){
         console.error(error);
       }
   }
 
-  module.exports = {
+  const loadmarketData=async(req,res)=>{
+    try {
+        const data= await marketModel.findOne({})
+        res.status(200).json({data})
+    } catch (error) {
+        res.status(500)
+        console.log(error);
+    }
+}
+
+module.exports = {
     fetchCalendarData,
-    fetchLiveCurrencyData
-  }
+    fetchLiveCurrencyData,
+    loadmarketData
+}

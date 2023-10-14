@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController/userController')
 const paymentController = require('../controllers/paymentController/paymentController')
 const chatController = require('../controllers/chatController/chatController')
+const marketController = require('../controllers/marketController/marketController')
 const multer = require('../config/multer');
 const upload = multer.createMulter();
 const {verifyToken} = require('../middleware/userAuth')
@@ -15,7 +16,7 @@ router.get('/payments',paymentController.paymentStatusHandle)
 router.get('/categories',userController.categoryLoad)
 router.get('/courses',userController.allCourses)
 router.post('/contact',userController.contactUs)
-router.get('/ecnomic-calender',userController.leadForexcalender)
+router.get('/market-data',marketController.loadmarketData)
 router.get('/load-course',userController.loadCourse)
 
 router.use(verifyToken)

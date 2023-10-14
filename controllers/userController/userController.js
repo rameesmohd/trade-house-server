@@ -465,15 +465,7 @@ const addReview=async(req,res)=>{
     }
 }
 
-const leadForexcalender=async(req,res)=>{
-    try {
-        const data= await marketModel.findOne({})
-        res.status(200).json({data})
-    } catch (error) {
-        res.status(500)
-        console.log(error);
-    }
-}
+
 
 
 module.exports = {
@@ -494,5 +486,4 @@ module.exports = {
     categoryLoad,
     contactUs,
     addReview,
-    leadForexcalender
 }
