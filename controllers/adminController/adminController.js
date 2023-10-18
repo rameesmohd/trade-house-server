@@ -102,7 +102,6 @@ const approveTutor =async(req,res)=>{
 
 const rejectTutorReq =async(req,res)=>{
     try {
-        console.log('asdfdf');
         const id = req.query.id
         const status =  await userModel.updateOne({_id : id},{$set:{is_requested :false,req_status : 'rejected'}})
         if(status){
