@@ -382,6 +382,8 @@ const overViewLoad = async (req, res) => {
     .findOne({ _id: tutor_id }, { b_wallet_balance: 1, b_wallet_transaction: 1 })
     .exec();
     const myCourses = await courseModel.find({ tutor: tutor_id }, { id: 1 })
+    const myCourse_ids = myCourses.map((course)=>course._id)
+
 
     const calculateTotalAmount = async (startDate, endDate) => {
         const aggregationPipeline = [
@@ -394,7 +396,7 @@ const overViewLoad = async (req, res) => {
                 $lte: endDate
               },
               course_id: {
-                $in: myCourses
+                $in: myCourse_ids
             }
             }
           },
