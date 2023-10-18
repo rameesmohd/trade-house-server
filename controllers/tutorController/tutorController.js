@@ -368,34 +368,6 @@ const myStudentsLoad=async(req,res)=>{
     }
 }
 
-const calculateTotalAmount = async (startDate, endDate) => {
-    const aggregationPipeline = [
-      {
-        $match: {
-          status: 'success',
-          is_refundable: false,
-          date_of_purchase: {
-            $gte: startDate,
-            $lte: endDate
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalAmount: {
-            $sum: '$amount'
-          }
-        }
-      }
-    ];
-    const totalAmount = await orderModel.aggregate(aggregationPipeline);
-    if (totalAmount.length > 0) {
-      return totalAmount[0].totalAmount;
-    } else {
-      return 0; // Return 0 if there are no orders
-    }
-}
 
 const overViewLoad = async (req, res) => {
     try {
@@ -410,6 +382,38 @@ const overViewLoad = async (req, res) => {
     .findOne({ _id: tutor_id }, { b_wallet_balance: 1, b_wallet_transaction: 1 })
     .exec();
     const myCourses = await courseModel.find({ tutor: tutor_id }, { id: 1 })
+
+    const calculateTotalAmount = async (startDate, endDate) => {
+        const aggregationPipeline = [
+          {
+            $match: {
+              status: 'success',
+              is_refundable: false,
+              date_of_purchase: {
+                $gte: startDate,
+                $lte: endDate
+              },
+              course_id: {
+                $in: myCourses
+            }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalAmount: {
+                $sum: '$amount'
+              }
+            }
+          }
+        ];
+        const totalAmount = await orderModel.aggregate(aggregationPipeline);
+        if (totalAmount.length > 0) {
+          return totalAmount[0].totalAmount;
+        } else {
+          return 0; // Return 0 if there are no orders
+        }
+    }    
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);

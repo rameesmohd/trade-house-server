@@ -452,8 +452,7 @@ const addReview=async(req,res)=>{
         .findOneAndUpdate(
           { _id: id },
           { $push: { user_ratings: review } },
-          { new: true } 
-        )
+          { new: true })
         .populate('tutor', 'firstName lastName image experience type_of_trader about_me')
         .populate('category')
         .exec();
@@ -464,8 +463,6 @@ const addReview=async(req,res)=>{
         console.log(error);
     }
 }
-
-
 
 
 module.exports = {
